@@ -62,10 +62,9 @@ export function buildRouter(spec: NormalisedSpec, options: AppOptions): Router {
   const store     = new CrudStore();
   const listPaths = buildListPathSet(spec);
 
-  // Override middleware runs before every route handler
-  if (options.overrides.length > 0) {
-    router.use(createOverrideMiddleware(options.overrides));
-  }
+  // Always register override middleware so hot-reload works even when
+  // no overrides exist at startup (length check prevents registration)
+  router.use(createOverrideMiddleware(options.overrides));
 
   for (const route of spec.routes) {
     const collectionBase = deriveCollectionBase(route);
