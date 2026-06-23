@@ -2,7 +2,10 @@
   "name": "mockr",
   "version": "0.1.1",
   "description": "Zero-config OpenAPI mock server — paste a spec, get a running server",
-  "bin": { "mockr": "./bin/mockr.js" },
+  "bin": {
+    "mockr":     "./bin/mockr.js",
+    "mockr-mcp": "./bin/mockr-mcp.js"
+  },
   "main": "./dist/index.js",
   "files": [
     "bin/",
@@ -10,9 +13,11 @@
     "ui-dist/",
     "README.md"
   ],
-  "engines": { "node": ">=18.0.0" },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
-    "build": "tsup src/cli.ts --format cjs --outDir dist --clean && npm run build:ui",
+    "build": "tsup src/cli.ts src/mcp/server.ts --format cjs --outDir dist --clean && npm run build:ui",
     "build:ui": "cd ui && npm run build",
     "dev": "tsx src/cli.ts serve",
     "start": "node dist/cli.js",
@@ -21,14 +26,16 @@
   "dependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
     "@faker-js/faker": "^9.0.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "chalk": "^4.1.2",
+    "chokidar": "^3.6.0",
     "commander": "^13.0.0",
     "cors": "^2.8.6",
     "express": "^5.0.1",
     "js-yaml": "^4.1.0",
-    "chokidar": "^3.6.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
