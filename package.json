@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "description": "Zero-config OpenAPI mock server — paste a spec, get a running server",
   "bin": {
-    "mockr":     "./bin/mockr.js",
+    "mockr": "./bin/mockr.js",
     "mockr-mcp": "./bin/mockr-mcp.js"
   },
   "main": "./dist/index.js",
@@ -19,6 +19,9 @@
   "scripts": {
     "build": "tsup src/cli.ts src/mcp/server.ts --format cjs --outDir dist --clean && npm run build:ui",
     "build:ui": "cd ui && npm run build",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "dev": "tsx src/cli.ts serve",
     "start": "node dist/cli.js",
     "prepublishOnly": "npm run build"
@@ -44,6 +47,7 @@
     "@types/node": "^22.0.0",
     "tsup": "^8.0.0",
     "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitepress": "^1.6.4"
   }
 }
