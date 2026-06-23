@@ -59,9 +59,12 @@ program
   .option('--proxy <url>',               'Proxy target — try real API first, fall back to mock')
   .option('--proxy-timeout <ms>',        'Timeout for proxy requests',                 '3000')
   .option('--scenario <name>',           `Scenario mode: ${SCENARIOS.join(' | ')}`,    'happy')
+  .option('--validate',                  'Warn in console when request body fails schema validation')
+  .option('--strict',                    'Reject (400) requests that fail schema validation')
   .action(async (specInput: string, options: {
     port: string; tui: boolean; delay: string; seed?: string;
-    watch?: boolean; proxy?: string; proxyTimeout: string; scenario: string;
+    watch?: boolean; proxy?: string; proxyTimeout: string;
+    scenario: string; validate?: boolean; strict?: boolean;
   }) => {
     const port     = parseInt(options.port);
     const useCache = !!options.seed;
@@ -83,6 +86,8 @@ program
       proxyTimeout: parseInt(options.proxyTimeout),
       overrides,
       scenario,
+      validate:     !!options.validate || !!options.strict,
+      strict:       !!options.strict,
     };
 
     let spec: NormalisedSpec;

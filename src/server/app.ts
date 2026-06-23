@@ -8,6 +8,7 @@ import { requestLogger } from './middleware/logger';
 import { sseManager } from './ui/sseManager';
 import { buildPostmanCollection } from './postman';
 import { createScenarioMiddleware, Scenario } from './scenarios';
+import { createValidatorMiddleware } from './middleware/validator';
 
 // Path to the compiled React UI (ui-dist/ sits next to dist/ at project root)
 const UI_DIST = path.resolve(__dirname, '../ui-dist');
@@ -19,6 +20,8 @@ export interface AppOptions {
   proxyTimeout: number;
   overrides: import('./overrides').Override[];
   scenario: Scenario;
+  validate: boolean;   // warn on schema mismatch
+  strict: boolean;     // reject (400) on schema mismatch
 }
 
 export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
@@ -48,6 +51,11 @@ export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
   });
 
   app.use(requestLogger);
+
+  // Validation middleware
+  if (options.validate || options.strict) {
+    app.use(createValidatorMiddleware(spec.routes, options.strict));
+  }
 
   // Scenario middleware — applied globally before route handlers
   const scenarioMiddleware = createScenarioMiddleware(options.scenario);
