@@ -21,6 +21,7 @@ export interface NormalisedRoute {
   responseSchema: JSONSchema;
   statusCode: number;
   security: boolean;
+  routeDelay?: number;  // from x-mockr-delay extension on the operation
 }
 
 export interface NormalisedSpec {

@@ -68,8 +68,10 @@ export function clearResponseCache(): void {
 
 export function createMockHandler(route: NormalisedRoute, delay: number, useCache: boolean) {
   return async (req: Request, res: Response): Promise<void> => {
-    if (delay > 0) {
-      await new Promise(r => setTimeout(r, delay));
+    // Per-route delay (x-mockr-delay) takes precedence over global --delay
+    const effectiveDelay = route.routeDelay ?? delay;
+    if (effectiveDelay > 0) {
+      await new Promise(r => setTimeout(r, effectiveDelay));
     }
 
     const schema = route.responseSchema;

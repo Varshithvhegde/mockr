@@ -98,6 +98,7 @@ export function resolveSpec(api: Record<string, unknown>): NormalisedSpec {
         responseSchema,
         statusCode,
         security: hasSecurity(operation, globalSecurity),
+        routeDelay: typeof operation['x-mockr-delay'] === 'number' ? operation['x-mockr-delay'] as number : undefined,
       });
     }
   }
