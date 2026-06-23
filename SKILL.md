@@ -12,24 +12,39 @@ mockr is a zero-config OpenAPI mock server. Give it a spec file or URL,
 it spins up a local HTTP server that returns realistic fake data for every
 endpoint. No sign-up, no config required to get started.
 
-**Project location:** `/Users/varshit.hegde/my_own/mockr`
+**npm package:** `@varshithvh/mockr`
 **GitHub:** https://github.com/Varshithvhegde/mockr
+**Docs:** https://varshithvhegde.github.io/mockr/
+**npm:** https://www.npmjs.com/package/@varshithvh/mockr
 
 ---
 
-## Quick start (always run from the mockr directory)
+## Installation
 
 ```bash
-cd /Users/varshit.hegde/my_own/mockr
+# Install globally (recommended)
+npm install -g @varshithvh/mockr
 
-# Start a mock server from a local spec
-node dist/cli.js serve ./openapi.yaml
+# Run without installing
+npx @varshithvh/mockr serve ./openapi.yaml
 
-# Start from a URL
-node dist/cli.js serve http://64.227.157.28:8080/apispec_1.json
+# Check version
+mockr --version
+```
+
+---
+
+## Quick start
+
+```bash
+# From a local file
+mockr serve ./openapi.yaml
+
+# From a remote URL
+mockr serve https://petstore3.swagger.io/api/v3/openapi.json
 
 # With options
-node dist/cli.js serve ./spec.yaml --port 4000 --delay 500 --seed 42
+mockr serve ./spec.yaml --port 4000 --delay 500 --seed 42
 ```
 
 After starting, open **http://localhost:3001/__mockr/ui/** for the live dashboard.
@@ -39,8 +54,9 @@ After starting, open **http://localhost:3001/__mockr/ui/** for the live dashboar
 ## All commands
 
 ### `serve` — start a mock server
+
 ```bash
-node dist/cli.js serve <spec> [options]
+mockr serve <spec> [options]
 
 Options:
   -p, --port <number>       Port to listen on (default: 3001)
@@ -49,16 +65,49 @@ Options:
   --watch                   Auto-reload server when spec file changes
   --proxy <url>             Try real API first, fall back to mock on failure
   --proxy-timeout <ms>      Timeout for proxy requests (default: 3000)
+  --scenario <name>         happy | error | empty | slow | chaos
+  --validate                Validate request bodies against spec schemas
+  --strict                  Return 400 on validation errors (requires --validate)
+  --record                  Save real API responses when using --proxy
+  --recording-dir <path>    Where to save recordings (default: mockr-recordings/)
   --no-tui                  Plain log output instead of terminal dashboard
 ```
 
 ### `init` — generate a mockr.json config
+
 ```bash
-node dist/cli.js init <spec> [--force]
+mockr init <spec> [--force]
 ```
+
 Reads the spec, generates `mockr.json` with one override entry per endpoint
-pre-filled with realistic fake data. User edits entries they want to customise
-and deletes the rest.
+pre-filled with realistic fake data. Edit the entries you want to customise
+and delete the rest.
+
+### `mockr-mcp` — start the MCP server
+
+```bash
+mockr-mcp
+```
+
+---
+
+## Development (working from source)
+
+```bash
+cd /Users/varshit.hegde/my_own/mockr
+
+# Run from source (no build needed)
+node dist/cli.js serve ./openapi.yaml
+
+# Build CLI + UI + MCP
+npm run build
+
+# Dev mode with auto-reload
+npm run dev -- serve ./openapi.yaml
+
+# Docs site
+npm run docs:dev
+```
 
 ---
 
@@ -71,6 +120,8 @@ and deletes the rest.
 | `GET /__mockr/routes` | All mocked routes as JSON array |
 | `GET /__mockr/postman` | Download Postman collection (import directly) |
 | `GET /__mockr/events` | SSE stream for live request events |
+| `GET /__mockr/overrides` | Current active overrides |
+| `POST /__mockr/override` | Add/update an override at runtime |
 
 ---
 
@@ -78,7 +129,7 @@ and deletes the rest.
 
 Create `mockr.json` in the directory where you run mockr.
 Only entries in this file are overridden — all other endpoints still return
-generated fake data.
+generated fake data. The file is watched — changes apply without restarting.
 
 ```json
 {
@@ -109,87 +160,154 @@ generated fake data.
 
 **Override fields:**
 - `method` — required. HTTP method (GET, POST, PUT, PATCH, DELETE)
-- `path` — required. Exact path or with `:param` wildcards
-- `status` — HTTP status code to return
-- `body` — JSON response body
+- `path` — required. Exact path or with `:param` wildcards e.g. `/api/users/:id`
+- `status` — HTTP status code to return (default: 200)
+- `body` — JSON response body (supports template tokens)
 - `delay` — milliseconds to wait before responding
 - `headers` — extra response headers to set
 
-**Supported config filenames (checked in order):**
-1. `mockr.json`
-2. `.mockr.json`
-3. `mockr.config.json`
+---
+
+## Response templating
+
+Override bodies support `{{token}}` placeholders resolved per-request.
+
+```json
+{
+  "method": "GET",
+  "path": "/api/users/:id",
+  "status": 200,
+  "body": {
+    "id": "{{params.id}}",
+    "email": "{{faker.email}}",
+    "name": "{{faker.name}}",
+    "createdAt": "{{now}}"
+  }
+}
+```
+
+### Request context tokens
+
+| Token | Returns |
+|-------|---------|
+| `{{params.x}}` | Path param — e.g. `{{params.id}}` for `/api/users/:id` |
+| `{{query.x}}` | Query string param — e.g. `{{query.page}}` |
+| `{{body.x}}` | Request body field — e.g. `{{body.email}}` |
+| `{{headers.x}}` | Request header — e.g. `{{headers.authorization}}` |
+| `{{method}}` | HTTP method (GET, POST, …) |
+| `{{path}}` | Request path (/api/users/42) |
+| `{{now}}` | Current ISO datetime |
+| `{{timestamp}}` | Unix timestamp (seconds) |
+
+### Faker tokens
+
+| Token | Returns |
+|-------|---------|
+| `{{faker.uuid}}` | Random UUID |
+| `{{faker.email}}` | Random email |
+| `{{faker.name}}` | Full name |
+| `{{faker.firstName}}` | First name |
+| `{{faker.lastName}}` | Last name |
+| `{{faker.phone}}` | Phone number |
+| `{{faker.url}}` | URL |
+| `{{faker.image}}` | Image URL |
+| `{{faker.number}}` | Integer 1–1000 |
+| `{{faker.price}}` | Float price |
+| `{{faker.date}}` | ISO date string |
+| `{{faker.datetime}}` | ISO datetime string |
+| `{{faker.boolean}}` | true/false |
+| `{{faker.slug}}` | URL slug |
+| `{{faker.username}}` | Username |
+| `{{faker.color}}` | Color name |
+| `{{faker.city}}` | City name |
+| `{{faker.country}}` | Country name |
+| `{{faker.company}}` | Company name |
+| `{{faker.word}}` | Single word |
+| `{{faker.sentence}}` | Lorem sentence |
+| `{{faker.paragraph}}` | Lorem paragraph |
+
+**Type preservation:** single-token fields keep native type — `"price": "{{faker.price}}"` → `42.99` (float, not string).
 
 ---
 
-## Per-endpoint delay via spec extension
+## Scenarios
 
-Add `x-mockr-delay` to any OpenAPI operation to slow down that specific endpoint:
-
-```yaml
-paths:
-  /api/reports:
-    get:
-      x-mockr-delay: 3000
-      summary: Generate report (slow)
+```bash
+mockr serve ./spec.yaml --scenario error    # every endpoint returns 500
+mockr serve ./spec.yaml --scenario empty    # all values set to empty/zero
+mockr serve ./spec.yaml --scenario slow     # random 1–5s delay
+mockr serve ./spec.yaml --scenario chaos    # random behaviour per request
+mockr serve ./spec.yaml --scenario happy    # normal (default)
 ```
 
-Per-route delay overrides the global `--delay` flag.
+Overrides always take priority over the active scenario.
+
+---
+
+## Proxy + recording
+
+```bash
+# Forward to real API, fall back to mock
+mockr serve ./spec.yaml --proxy https://api.example.com
+
+# Record real responses to disk
+mockr serve ./spec.yaml --proxy https://api.example.com --record
+
+# Replay recordings offline (no --proxy needed)
+mockr serve ./spec.yaml
+```
+
+Recordings saved to `mockr-recordings/` by default.
+
+---
+
+## Request validation
+
+```bash
+# Warn mode — log errors, add X-Mockr-Validation-Warnings header
+mockr serve ./spec.yaml --validate
+
+# Strict mode — return 400 on invalid request body
+mockr serve ./spec.yaml --validate --strict
+```
 
 ---
 
 ## Stateful CRUD
 
-Routes that follow REST patterns are automatically stateful:
-- `GET /api/users` → returns list (auto-seeded with 4 fake users on first call)
-- `POST /api/users` → creates user, stores in memory, returns 201
-- `GET /api/users/:id` → returns stored user, 404 if not found
-- `PUT/PATCH /api/users/:id` → updates stored user
-- `DELETE /api/users/:id` → removes user, returns 204
+Routes matching REST patterns are automatically stateful:
+- `GET /api/users` → list (starts empty)
+- `POST /api/users` → create, store in memory, return created item
+- `GET /api/users/:id` → read one, 404 if not found
+- `PUT/PATCH /api/users/:id` → update stored item
+- `DELETE /api/users/:id` → remove, return 204
 
-State resets when the server restarts.
-
----
-
-## Proxy fallback
-
-```bash
-node dist/cli.js serve ./spec.yaml --proxy https://api.myapp.com
-```
-
-For each request mockr will:
-1. Forward the request to `https://api.myapp.com`
-2. If real API responds 2xx → return that response (marked `PROXY` in UI)
-3. If real API fails/times out → return mock data (marked `MOCK` in UI)
+State resets on server restart.
 
 ---
 
 ## MCP server (for AI assistants)
 
-The MCP server lets AI tools interact with mockr directly.
-
 ```bash
-# Run the MCP server
-node dist/mcp/server.js
+# If installed globally
+mockr-mcp
+
+# Configure in Claude Desktop (~/.../Claude/claude_desktop_config.json)
 ```
 
-**Configure in Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "mockr": {
-      "command": "node",
-      "args": ["/Users/varshit.hegde/my_own/mockr/dist/mcp/server.js"]
-    }
+    "mockr": { "command": "mockr-mcp" }
   }
 }
 ```
 
-### MCP tools available
+**Available MCP tools:**
 
 | Tool | What it does |
 |------|-------------|
-| `inspect_spec` | Load a spec, get route/tag/schema summary |
+| `inspect_spec` | Load a spec, get route/schema summary |
 | `generate_mock_config` | Generate mockr.json with fake data from spec |
 | `query_mock_server` | Health check, list routes, or make a test request |
 | `add_override` | Add/update a single override in mockr.json |
@@ -199,59 +317,44 @@ node dist/mcp/server.js
 
 ## Common tasks for AI assistants
 
-### "Start a mock server for this spec"
+### Start a mock server
 ```bash
-cd /Users/varshit.hegde/my_own/mockr
-node dist/cli.js serve <spec-path-or-url> --port 3001
+mockr serve <spec-path-or-url> --port 3001
+# Then: http://localhost:3001/__mockr/ui/
 ```
-Then tell the user: open http://localhost:3001/__mockr/ui/
 
-### "Generate a config file"
+### Generate a config file
 ```bash
-node dist/cli.js init <spec> --force
+mockr init <spec> --force
+# Edit mockr.json to customise responses
 ```
-Then open `mockr.json` and edit the relevant entries.
 
-### "Make this endpoint return an error"
+### Make an endpoint return an error
 Add to `mockr.json`:
 ```json
 { "method": "GET", "path": "/api/that-endpoint", "status": 500, "body": { "error": "something went wrong" } }
 ```
-Then restart the server.
 
-### "Make this endpoint slow"
-Option A — in mockr.json:
+### Make an endpoint slow
 ```json
 { "method": "GET", "path": "/api/slow", "delay": 3000 }
 ```
-Option B — in the spec file:
-```yaml
-x-mockr-delay: 3000
-```
 
-### "Download a Postman collection"
-While server is running: `curl http://localhost:3001/__mockr/postman -o collection.json`
-Then import `collection.json` into Postman.
-
-### "Test all endpoints"
+### Download a Postman collection
 ```bash
-curl http://localhost:3001/__mockr/routes | python3 -m json.tool
+curl http://localhost:3001/__mockr/postman -o collection.json
 ```
 
----
-
-## Build from source
-
+### List all routes
 ```bash
-cd /Users/varshit.hegde/my_own/mockr
-npm install
-npm run build       # builds CLI + React UI + MCP server
+curl http://localhost:3001/__mockr/routes
 ```
 
-Output:
-- `dist/cli.js` — main CLI
-- `dist/mcp/server.js` — MCP server
-- `ui-dist/` — compiled React dashboard
+### Test an endpoint
+```bash
+curl http://localhost:3001/api/users/123
+curl -X POST http://localhost:3001/api/users -H "Content-Type: application/json" -d '{"name":"Alice"}'
+```
 
 ---
 
@@ -260,7 +363,8 @@ Output:
 | Problem | Fix |
 |---------|-----|
 | Port already in use | Add `--port 3002` |
-| Spec has broken `$ref` | mockr handles this gracefully — unresolved refs become empty objects |
-| All endpoints return `{}` | Response schema not defined in spec — add schemas or use `mockr.json` overrides |
+| Spec has broken `$ref` | mockr handles gracefully — unresolved refs become empty objects |
+| All endpoints return `{}` | Response schema not defined in spec — use `mockr.json` overrides |
 | UI shows "Connecting..." | SSE blocked — try `--no-tui` and check browser console |
-| CRUD not working | Path must match REST pattern: GET /items + GET /items/:id in same spec |
+| CRUD not working | Path must match REST pattern: `GET /items` + `GET /items/:id` in same spec |
+| npx not found | Use `npx @varshithvh/mockr serve` or install globally first |
