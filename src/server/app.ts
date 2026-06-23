@@ -7,8 +7,8 @@ import { buildRouter } from './router';
 import { requestLogger } from './middleware/logger';
 import { sseManager } from './ui/sseManager';
 
-// Path to the compiled React UI
-const UI_DIST = path.resolve(__dirname, '../../ui-dist');
+// Path to the compiled React UI (ui-dist/ sits next to dist/ at project root)
+const UI_DIST = path.resolve(__dirname, '../ui-dist');
 
 export interface AppOptions {
   delay: number;
@@ -51,7 +51,7 @@ export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
   // Web UI — serve React app from ui-dist, fallback to inline template
   if (fs.existsSync(UI_DIST)) {
     app.use('/__mockr/ui', express.static(UI_DIST));
-    app.get('/__mockr/ui/*', (_req, res) => {
+    app.get('/__mockr/ui/{*path}', (_req, res) => {
       res.sendFile(path.join(UI_DIST, 'index.html'));
     });
   } else {
