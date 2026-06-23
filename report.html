@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mockr — AkkoRent API Test Report</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;color:#1e293b;font-size:14px}
+  header{background:#0f172a;color:#fff;padding:28px 40px}
+  header h1{font-size:22px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
+  header p{color:#94a3b8;font-size:13px}
+  .stats{display:flex;gap:16px;padding:24px 40px;background:#fff;border-bottom:1px solid #e2e8f0}
+  .stat{background:#f1f5f9;border-radius:10px;padding:14px 20px;min-width:110px}
+  .stat .n{font-size:28px;font-weight:800;line-height:1}
+  .stat .l{font-size:11px;color:#64748b;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+  .stat.ok .n{color:#16a34a}
+  .stat.fail .n{color:#dc2626}
+  .stat.warn .n{color:#d97706}
+  .stat.total .n{color:#2563eb}
+  .filters{display:flex;gap:8px;padding:16px 40px;background:#fff;border-bottom:1px solid #e2e8f0}
+  .filters button{border:1.5px solid #e2e8f0;background:#fff;border-radius:6px;padding:5px 14px;font-size:12px;cursor:pointer;font-weight:500;transition:all .15s}
+  .filters button.active,.filters button:hover{background:#0f172a;color:#fff;border-color:#0f172a}
+  .container{padding:24px 40px}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+  th{background:#f8fafc;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:1.5px solid #e2e8f0;font-weight:600}
+  .row td{padding:10px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .1s}
+  .row:hover td{background:#f8fafc}
+  .row.warn td{background:#fffbeb}
+  .row.warn:hover td{background:#fef3c7}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.3px;min-width:54px;text-align:center}
+  .chip{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+  .chip.ok{background:#dcfce7;color:#16a34a}
+  .chip.fail{background:#fee2e2;color:#dc2626}
+  .chip.err{background:#fce7f3;color:#9333ea}
+  .path{font-family:"SF Mono",Monaco,monospace;font-size:12px;color:#334155;max-width:340px}
+  .ms{color:#64748b;font-size:12px}
+  .preview{font-family:monospace;font-size:11px;color:#64748b;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .detail{display:none}
+  .detail.open{display:table-row}
+  .detail td{background:#0f172a;padding:16px 20px}
+  .detail pre{color:#e2e8f0;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all;max-height:400px;overflow-y:auto}
+  .empty-badge{font-size:10px;padding:1px 6px;background:#fef9c3;color:#92400e;border-radius:3px;margin-left:6px;vertical-align:middle}
+  .section-header{font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:16px 0 8px;display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  @media(max-width:768px){
+    header,.stats,.filters,.container{padding-left:16px;padding-right:16px}
+    .preview,.ms{display:none}
+    .path{max-width:180px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>mockr — AkkoRent API Test Report</h1>
+  <p>Spec: http://64.227.157.28:8080/apispec_1.json &nbsp;·&nbsp; 54 endpoints tested</p>
+</header>
+
+<div class="stats">
+  <div class="stat total"><div class="n">54</div><div class="l">Total</div></div>
+  <div class="stat ok"><div class="n">53</div><div class="l">Passed ✓</div></div>
+  <div class="stat fail"><div class="n">1</div><div class="l">Failed ✗</div></div>
+  <div class="stat warn"><div class="n">14</div><div class="l">Empty schema</div></div>
+</div>
+
+<div class="filters">
+  <button class="active" onclick="filterRows('all',this)">All (54)</button>
+  <button onclick="filterRows('ok',this)">Passed (53)</button>
+  <button onclick="filterRows('fail',this)">Failed (1)</button>
+  <button onclick="filterRows('warn',this)">Empty (14)</button>
+</div>
+
+<div class="container">
+<table id="main-table">
+  <thead>
+    <tr>
+      <th style="width:80px">Method</th>
+      <th>Path</th>
+      <th style="width:70px">Status</th>
+      <th style="width:70px">Time</th>
+      <th>Response preview</th>
+    </tr>
+  </thead>
+  <tbody>
+    
+    <tr class="row" onclick="toggle(0)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/wishlist</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">40ms</td>
+      <td class="preview">{
+  &quot;total&quot;: 42,
+  &quot;page&quot;: 1,
+  &quot;per_page&quot;: 20,
+  &quot;wishlist_meta&quot;: [
+    {
+     …</td>
+    </tr>
+    <tr class="detail" id="detail-0">
+      <td colspan="5"><pre>{
+  &quot;total&quot;: 42,
+  &quot;page&quot;: 1,
+  &quot;per_page&quot;: 20,
+  &quot;wishlist_meta&quot;: [
+    {
+      &quot;item_id&quot;: &quot;464b505e-1d8c-4571-85b7-e6e08180477d&quot;,
+      &quot;added_at&quot;: &quot;2026-06-23T01:49:44.558Z&quot;,
+      &quot;notes&quot;: &quot;Candidus universe &quot;
+    },
+    {
+      &quot;wishlist_id&quot;: &quot;e0e5e566-735e-49f7-b079-617a9ae43a53&quot;,
+      &quot;item_id&quot;: &quot;9735d583-28d8-4fc7-95f2-fc85d42e5a89&quot;,
+      &quot;added_at&quot;: &quot;2026-06-22T13:23:15.561Z&quot;,
+      &quot;notes&quot;: &quot;Tristis tepesco&quot;
+    },
+    {
+      &quot;item_id&quot;: &quot;59ee2098-92d8-42d5-a0a8-eb227fe1ca73&quot;,
+      &quot;added_at&quot;: &quot;2026-06-22T17:01:02.046Z&quot;,
+      &quot;notes&quot;: &quot;crepti&quot;
+    }
+  ]
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(1)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/wishlist</td>
+      <td><span class="chip ok">201</span></td>
+      <td class="ms">10ms</td>
+      <td class="preview">{
+  &quot;message&quot;: &quot;Operation completed successfully&quot;,
+  &quot;item_id&quot;: &quot;abc123&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-1">
+      <td colspan="5"><pre>{
+  &quot;message&quot;: &quot;Operation completed successfully&quot;,
+  &quot;item_id&quot;: &quot;abc123&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(2)">
+      <td><span class="badge" style="background:#fee2e2;color:#ef4444">DELETE</span></td>
+      <td class="path">/api/wishlist/item123</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">1ms</td>
+      <td class="preview">&quot;&quot;</td>
+    </tr>
+    <tr class="detail" id="detail-2">
+      <td colspan="5"><pre>&quot;&quot;</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(3)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/wishlist/count/item/item123</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">1ms</td>
+      <td class="preview">{
+  &quot;item_id&quot;: &quot;item123&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-3">
+      <td colspan="5"><pre>{
+  &quot;item_id&quot;: &quot;item123&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(4)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/wishlist/count/owner/owner456</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;wishlist_count&quot;: 256
+}</td>
+    </tr>
+    <tr class="detail" id="detail-4">
+      <td colspan="5"><pre>{
+  &quot;wishlist_count&quot;: 256
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(5)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/mobile/auth/send-otp</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">1ms</td>
+      <td class="preview">{
+  &quot;message&quot;: &quot;OTP sent&quot;,
+  &quot;phone&quot;: &quot;+916363549133&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-5">
+      <td colspan="5"><pre>{
+  &quot;message&quot;: &quot;OTP sent&quot;,
+  &quot;phone&quot;: &quot;+916363549133&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(6)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/mobile/auth/verify-otp</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;ok&quot;: true,
+  &quot;status&quot;: &quot;needs_registration&quot;,
+  &quot;registration_token&quot;: &quot;eyJhb…</td>
+    </tr>
+    <tr class="detail" id="detail-6">
+      <td colspan="5"><pre>{
+  &quot;ok&quot;: true,
+  &quot;status&quot;: &quot;needs_registration&quot;,
+  &quot;registration_token&quot;: &quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...&quot;,
+  &quot;access_token&quot;: &quot;aa7aa72a-455f-478c-ba6b-64bcb796d2f5&quot;,
+  &quot;refresh_token&quot;: &quot;ecGAiDFfXVMEK7dm...&quot;,
+  &quot;phone&quot;: &quot;+916363549133&quot;,
+  &quot;code&quot;: &quot;123456&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(7)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/mobile/auth/complete-profile</td>
+      <td><span class="chip ok">201</span></td>
+      <td class="ms">1ms</td>
+      <td class="preview">{
+  &quot;ok&quot;: true,
+  &quot;refresh_token&quot;: &quot;ecGAiDFfXVMEK7dm...&quot;,
+  &quot;user&quot;: {
+    &quot;id&quot;: …</td>
+    </tr>
+    <tr class="detail" id="detail-7">
+      <td colspan="5"><pre>{
+  &quot;ok&quot;: true,
+  &quot;refresh_token&quot;: &quot;ecGAiDFfXVMEK7dm...&quot;,
+  &quot;user&quot;: {
+    &quot;id&quot;: &quot;6a257b6b519e5ce7cb8093a4&quot;,
+    &quot;username&quot;: &quot;varshith_b1506a58&quot;,
+    &quot;last_name&quot;: &quot;Hegde&quot;,
+    &quot;roles&quot;: [
+      &quot;user&quot;
+    ],
+    &quot;avatar&quot;: &quot;https://res.cloudinary.com/...&quot;
+  },
+  &quot;name&quot;: &quot;Varshith Hegde&quot;,
+  &quot;email&quot;: &quot;varshithvh@gmail.com&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(8)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/items/</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">[
+  {
+    &quot;_id&quot;: &quot;507f1f77bcf86cd799439011&quot;,
+    &quot;title&quot;: &quot;Canon EOS 5D Mark IV&quot;…</td>
+    </tr>
+    <tr class="detail" id="detail-8">
+      <td colspan="5"><pre>[
+  {
+    &quot;_id&quot;: &quot;507f1f77bcf86cd799439011&quot;,
+    &quot;title&quot;: &quot;Canon EOS 5D Mark IV&quot;,
+    &quot;description&quot;: &quot;Professional DSLR camera for rent&quot;,
+    &quot;category&quot;: &quot;Camera&quot;,
+    &quot;subCategory&quot;: &quot;DSLR&quot;,
+    &quot;attributes&quot;: {
+      &quot;brand&quot;: &quot;Canon&quot;,
+      &quot;model&quot;: &quot;EOS 5D Mark IV&quot;,
+      &quot;megapixels&quot;: 30.4
+    },
+    &quot;rentalDetails&quot;: {
+      &quot;pricePerDay&quot;: 2500
+    },
+    &quot;location&quot;: {
+      &quot;state&quot;: &quot;Maharashtra&quot;
+    },
+    &quot;status&quot;: &quot;available&quot;,
+    &quot;created_at&quot;: &quot;2026-06-22T22:57:14.281Z&quot;
+  },
+  {
+    &quot;_id&quot;: &quot;507f1f77bcf86cd799439011&quot;,
+    &quot;description&quot;: &quot;Professional DSLR camera for rent&quot;,
+    &quot;category&quot;: &quot;Camera&quot;,
+    &quot;location&quot;: {
+      &quot;city&quot;: &quot;Mumbai&quot;
+    },
+    &quot;status&quot;: &quot;available&quot;,
+    &quot;created_at&quot;: &quot;2026-06-23T01:08:59.066Z&quot;
+  },
+  {
+    &quot;_id&quot;: &quot;507f1f77bcf86cd799439011&quot;,
+    &quot;description&quot;: &quot;Professional DSLR camera for rent&quot;,
+    &quot;subCategory&quot;: &quot;DSLR&quot;,
+    &quot;attributes&quot;: {
+      &quot;brand&quot;: &quot;Canon&quot;,
+      &quot;model&quot;: &quot;EOS 5D Mark IV&quot;,
+      &quot;megapixels&quot;: 30.4
+    },
+    &quot;rentalDetails&quot;: {
+      &quot;pricePerDay&quot;: 2500,
+      &quot;currency&quot;: &quot;INR&quot;
+    },
+    &quot;location&quot;: {
+      &quot;city&quot;: &quot;Mumbai&quot;,
+      &quot;state&quot;: &quot;Maharashtra&quot;
+    },
+    &quot;created_at&quot;: &quot;2026-06-22T11:05:12.441Z&quot;
+  }
+]</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(9)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/items/</td>
+      <td><span class="chip ok">201</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;message&quot;: &quot;Item created successfully&quot;,
+  &quot;title&quot;: &quot;Camera&quot;,
+  &quot;category&quot;: &quot;…</td>
+    </tr>
+    <tr class="detail" id="detail-9">
+      <td colspan="5"><pre>{
+  &quot;message&quot;: &quot;Item created successfully&quot;,
+  &quot;title&quot;: &quot;Camera&quot;,
+  &quot;category&quot;: &quot;electronics&quot;,
+  &quot;price&quot;: 500
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(10)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/items/item123</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">2ms</td>
+      <td class="preview">{
+  &quot;title&quot;: &quot;Acceptus animadverto copiose tenetur addo audax vulgus comedo.&quot;,
+ …</td>
+    </tr>
+    <tr class="detail" id="detail-10">
+      <td colspan="5"><pre>{
+  &quot;title&quot;: &quot;Acceptus animadverto copiose tenetur addo audax vulgus comedo.&quot;,
+  &quot;description&quot;: &quot;Advoco velum armarium. Voro utilis candidus aspicio uxor adfectus cultura. Curso allatus ait video decumbo recusandae conscendo consuasor celo accendo.&quot;,
+  &quot;category&quot;: &quot;Jewelry&quot;,
+  &quot;subCategory&quot;: &quot;Cibus assumenda summopere ver&quot;,
+  &quot;attributes&quot;: {},
+  &quot;rentalDetails&quot;: {},
+  &quot;location&quot;: {},
+  &quot;images&quot;: [
+    &quot;https://picsum.photos/seed/lPR0ngWvo/3577/2095&quot;,
+    &quot;https://loremflickr.com/2740/1118?lock=1441601036505798&quot;
+  ],
+  &quot;contactInfo&quot;: {
+    &quot;ownerId&quot;: &quot;0967781b-afd1-41f1-970c-012908c7a306&quot;,
+    &quot;ownerName&quot;: &quot;Alfred Luettgen&quot;,
+    &quot;ownerEmail&quot;: &quot;Stella74@hotmail.com&quot;
+  }
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(11)">
+      <td><span class="badge" style="background:#cffafe;color:#06b6d4">PATCH</span></td>
+      <td class="path">/api/items/item123</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;message&quot;: &quot;Item updated successfully&quot;,
+  &quot;title&quot;: &quot;Updated Camera&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-11">
+      <td colspan="5"><pre>{
+  &quot;message&quot;: &quot;Item updated successfully&quot;,
+  &quot;title&quot;: &quot;Updated Camera&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(12)">
+      <td><span class="badge" style="background:#fee2e2;color:#ef4444">DELETE</span></td>
+      <td class="path">/api/items/item123</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-12">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(13)">
+      <td><span class="badge" style="background:#dbeafe;color:#3b82f6">PUT</span></td>
+      <td class="path">/api/items/replace/item123</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;message&quot;: &quot;Item replaced successfully&quot;,
+  &quot;title&quot;: &quot;New Camera&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-13">
+      <td colspan="5"><pre>{
+  &quot;message&quot;: &quot;Item replaced successfully&quot;,
+  &quot;title&quot;: &quot;New Camera&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(14)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/items/categories/electronics</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;id&quot;: &quot;electronics&quot;,
+  &quot;name&quot;: &quot;Camera&quot;,
+  &quot;subcategories&quot;: [
+    {
+      &quot;i…</td>
+    </tr>
+    <tr class="detail" id="detail-14">
+      <td colspan="5"><pre>{
+  &quot;id&quot;: &quot;electronics&quot;,
+  &quot;name&quot;: &quot;Camera&quot;,
+  &quot;subcategories&quot;: [
+    {
+      &quot;id&quot;: &quot;dslr&quot;,
+      &quot;name&quot;: &quot;DSLR Cameras&quot;,
+      &quot;items&quot;: [
+        &quot;Canon EOS 1500D&quot;,
+        &quot;Nikon D5600&quot;
+      ]
+    }
+  ]
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(15)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/review</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;items&quot;: [
+    {
+      &quot;id&quot;: &quot;58b3f08b-357c-42c6-a312-b16c51716ce2&quot;,
+      &quot;…</td>
+    </tr>
+    <tr class="detail" id="detail-15">
+      <td colspan="5"><pre>{
+  &quot;items&quot;: [
+    {
+      &quot;id&quot;: &quot;58b3f08b-357c-42c6-a312-b16c51716ce2&quot;,
+      &quot;target_type&quot;: &quot;desino&quot;,
+      &quot;rating&quot;: 1958,
+      &quot;comment&quot;: &quot;Trucido vicissitudo p&quot;,
+      &quot;updated_at&quot;: &quot;2026-06-22T19:31:14.305Z&quot;
+    }
+  ]
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(16)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/review</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;status&quot;: &quot;created&quot;,
+  &quot;review_id&quot;: &quot;65a400c91eaf3&quot;,
+  &quot;rating&quot;: 5,
+  &quot;comme…</td>
+    </tr>
+    <tr class="detail" id="detail-16">
+      <td colspan="5"><pre>{
+  &quot;status&quot;: &quot;created&quot;,
+  &quot;review_id&quot;: &quot;65a400c91eaf3&quot;,
+  &quot;rating&quot;: 5,
+  &quot;comment&quot;: &quot;Great product!&quot;,
+  &quot;item_id&quot;: &quot;item123&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(17)">
+      <td><span class="badge" style="background:#fee2e2;color:#ef4444">DELETE</span></td>
+      <td class="path">/api/review/rev456</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">&quot;&quot;</td>
+    </tr>
+    <tr class="detail" id="detail-17">
+      <td colspan="5"><pre>&quot;&quot;</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(18)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/chats/</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">[
+  {},
+  {}
+]</td>
+    </tr>
+    <tr class="detail" id="detail-18">
+      <td colspan="5"><pre>[
+  {},
+  {}
+]</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(19)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/chats/initiate</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;receiver_id&quot;: &quot;user456&quot;,
+  &quot;item_id&quot;: &quot;item123&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-19">
+      <td colspan="5"><pre>{
+  &quot;receiver_id&quot;: &quot;user456&quot;,
+  &quot;item_id&quot;: &quot;item123&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(20)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/chats/chat123/messages</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">[
+  {},
+  {},
+  {},
+  {}
+]</td>
+    </tr>
+    <tr class="detail" id="detail-20">
+      <td colspan="5"><pre>[
+  {},
+  {},
+  {},
+  {}
+]</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(21)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/chats/chat123/messages</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;content&quot;: &quot;Hello, is this available?&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-21">
+      <td colspan="5"><pre>{
+  &quot;content&quot;: &quot;Hello, is this available?&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(22)">
+      <td><span class="badge" style="background:#fee2e2;color:#ef4444">DELETE</span></td>
+      <td class="path">/api/chats/chat123</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-22">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(23)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/chats/unread-count</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-23">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(24)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/account</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-24">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(25)">
+      <td><span class="badge" style="background:#cffafe;color:#06b6d4">PATCH</span></td>
+      <td class="path">/api/account/update</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;first_name&quot;: &quot;Varshith&quot;,
+  &quot;last_name&quot;: &quot;Hegde&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-25">
+      <td colspan="5"><pre>{
+  &quot;first_name&quot;: &quot;Varshith&quot;,
+  &quot;last_name&quot;: &quot;Hegde&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(26)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/account/email-change</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;new_email&quot;: &quot;new@example.com&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-26">
+      <td colspan="5"><pre>{
+  &quot;new_email&quot;: &quot;new@example.com&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(27)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/account/email/confirm</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-27">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(28)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/account/change-password</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;old_password&quot;: &quot;old123&quot;,
+  &quot;new_password&quot;: &quot;new456&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-28">
+      <td colspan="5"><pre>{
+  &quot;old_password&quot;: &quot;old123&quot;,
+  &quot;new_password&quot;: &quot;new456&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(29)">
+      <td><span class="badge" style="background:#fee2e2;color:#ef4444">DELETE</span></td>
+      <td class="path">/api/account/delete</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-29">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(30)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/products</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-30">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(31)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/products/dashboard/stats</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-31">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(32)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/products/prod123</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-32">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(33)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/products/prod123/view</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;ok&quot;: true
+}</td>
+    </tr>
+    <tr class="detail" id="detail-33">
+      <td colspan="5"><pre>{
+  &quot;ok&quot;: true
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(34)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/media/cloudinary/signature</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">1ms</td>
+      <td class="preview">{
+  &quot;ok&quot;: true,
+  &quot;cloud_name&quot;: &quot;Alexander Watsica&quot;,
+  &quot;api_key&quot;: &quot;Taedium alter…</td>
+    </tr>
+    <tr class="detail" id="detail-34">
+      <td colspan="5"><pre>{
+  &quot;ok&quot;: true,
+  &quot;cloud_name&quot;: &quot;Alexander Watsica&quot;,
+  &quot;api_key&quot;: &quot;Taedium alter&quot;,
+  &quot;signature&quot;: &quot;Adulescens defaeco atavus st&quot;,
+  &quot;params&quot;: {},
+  &quot;folder&quot;: &quot;items&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(35)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/media/cloudinary/discard</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;deleted&quot;: [
+    &quot;Usque comminor viscus&quot;,
+    &quot;Vita basium &quot;,
+    &quot;Tamen del…</td>
+    </tr>
+    <tr class="detail" id="detail-35">
+      <td colspan="5"><pre>{
+  &quot;deleted&quot;: [
+    &quot;Usque comminor viscus&quot;,
+    &quot;Vita basium &quot;,
+    &quot;Tamen deleo caecus tha&quot;
+  ],
+  &quot;failed&quot;: [
+    {},
+    {}
+  ],
+  &quot;public_id&quot;: &quot;items/abc&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(36)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/chatbot/chat</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;success&quot;: true,
+  &quot;response&quot;: &quot;texo&quot;,
+  &quot;tool_calls&quot;: [
+    {},
+    {},
+   …</td>
+    </tr>
+    <tr class="detail" id="detail-36">
+      <td colspan="5"><pre>{
+  &quot;success&quot;: true,
+  &quot;response&quot;: &quot;texo&quot;,
+  &quot;tool_calls&quot;: [
+    {},
+    {},
+    {}
+  ],
+  &quot;message&quot;: &quot;What items are available?&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(37)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/chatbot/suggestions</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;success&quot;: true
+}</td>
+    </tr>
+    <tr class="detail" id="detail-37">
+      <td colspan="5"><pre>{
+  &quot;success&quot;: true
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(38)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/chatbot/health</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;success&quot;: false,
+  &quot;message&quot;: &quot;Amaritudo auditor color c&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-38">
+      <td colspan="5"><pre>{
+  &quot;success&quot;: false,
+  &quot;message&quot;: &quot;Amaritudo auditor color c&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(39)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/categories/popular</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;ok&quot;: true,
+  &quot;source&quot;: &quot;cache&quot;,
+  &quot;generated_at&quot;: &quot;2026-06-22T17:11:21.212Z…</td>
+    </tr>
+    <tr class="detail" id="detail-39">
+      <td colspan="5"><pre>{
+  &quot;ok&quot;: true,
+  &quot;source&quot;: &quot;cache&quot;,
+  &quot;generated_at&quot;: &quot;2026-06-22T17:11:21.212Z&quot;,
+  &quot;categories&quot;: [
+    {
+      &quot;id&quot;: &quot;bike&quot;,
+      &quot;item_count&quot;: 42
+    },
+    {
+      &quot;id&quot;: &quot;bike&quot;,
+      &quot;name&quot;: &quot;Bikes&quot;,
+      &quot;icon&quot;: &quot;MdTwoWheeler&quot;,
+      &quot;item_count&quot;: 42
+    },
+    {
+      &quot;name&quot;: &quot;Bikes&quot;,
+      &quot;item_count&quot;: 42
+    },
+    {
+      &quot;id&quot;: &quot;bike&quot;,
+      &quot;icon&quot;: &quot;MdTwoWheeler&quot;,
+      &quot;item_count&quot;: 42
+    }
+  ]
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(40)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/auth/signup</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;message&quot;: &quot;User created successfully&quot;,
+  &quot;user&quot;: {
+    &quot;_id&quot;: &quot;507f1f77bcf8…</td>
+    </tr>
+    <tr class="detail" id="detail-40">
+      <td colspan="5"><pre>{
+  &quot;message&quot;: &quot;User created successfully&quot;,
+  &quot;user&quot;: {
+    &quot;_id&quot;: &quot;507f1f77bcf86cd799439011&quot;,
+    &quot;first_name&quot;: &quot;John&quot;,
+    &quot;last_name&quot;: &quot;Doe&quot;,
+    &quot;username&quot;: &quot;johndoe123&quot;,
+    &quot;phone&quot;: &quot;+15551234567&quot;,
+    &quot;roles&quot;: [
+      &quot;user&quot;
+    ],
+    &quot;is_verified&quot;: true,
+    &quot;created_at&quot;: &quot;2026-06-23T05:09:25.194Z&quot;
+  },
+  &quot;access_token&quot;: &quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...&quot;,
+  &quot;email&quot;: &quot;test@akkorent.in&quot;,
+  &quot;password&quot;: &quot;pass123&quot;,
+  &quot;first_name&quot;: &quot;Test&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(41)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/auth/login</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;message&quot;: &quot;Login successful&quot;,
+  &quot;user&quot;: {
+    &quot;email&quot;: &quot;Josue_Schaefer52@ya…</td>
+    </tr>
+    <tr class="detail" id="detail-41">
+      <td colspan="5"><pre>{
+  &quot;message&quot;: &quot;Login successful&quot;,
+  &quot;user&quot;: {
+    &quot;email&quot;: &quot;Josue_Schaefer52@yahoo.com&quot;,
+    &quot;roles&quot;: [
+      &quot;d&quot;,
+      &quot;reprehen&quot;,
+      &quot;sum&quot;
+    ]
+  },
+  &quot;access_token&quot;: &quot;lzr8fz2upGSJRAJZ3xcTubfKMJRVXeaz8ZZQF9bK&quot;,
+  &quot;refresh_token&quot;: &quot;TFIZcizS896xlOcW9heh5ntcpbKKWXwDsANHYE8Z&quot;,
+  &quot;email&quot;: &quot;test@akkorent.in&quot;,
+  &quot;password&quot;: &quot;pass123&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(42)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/auth/refresh</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;refresh_token&quot;: &quot;some_token&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-42">
+      <td colspan="5"><pre>{
+  &quot;refresh_token&quot;: &quot;some_token&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(43)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/auth/logout</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;message&quot;: &quot;Logged out successfully&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-43">
+      <td colspan="5"><pre>{
+  &quot;message&quot;: &quot;Logged out successfully&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(44)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/auth/google/login</td>
+      <td><span class="chip fail">302</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-44">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(45)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/auth/otp/request</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;message&quot;: &quot;OTP sent successfully&quot;,
+  &quot;expires_in&quot;: 300,
+  &quot;email&quot;: &quot;test@ak…</td>
+    </tr>
+    <tr class="detail" id="detail-45">
+      <td colspan="5"><pre>{
+  &quot;message&quot;: &quot;OTP sent successfully&quot;,
+  &quot;expires_in&quot;: 300,
+  &quot;email&quot;: &quot;test@akkorent.in&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(46)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/auth/otp/verify</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;message&quot;: &quot;OTP verified successfully&quot;,
+  &quot;email&quot;: &quot;test@akkorent.in&quot;,
+  &quot;ot…</td>
+    </tr>
+    <tr class="detail" id="detail-46">
+      <td colspan="5"><pre>{
+  &quot;message&quot;: &quot;OTP verified successfully&quot;,
+  &quot;email&quot;: &quot;test@akkorent.in&quot;,
+  &quot;otp&quot;: &quot;123456&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(47)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/contact/submit</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;name&quot;: &quot;Varshith&quot;,
+  &quot;email&quot;: &quot;v@v.com&quot;,
+  &quot;message&quot;: &quot;Hello&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-47">
+      <td colspan="5"><pre>{
+  &quot;name&quot;: &quot;Varshith&quot;,
+  &quot;email&quot;: &quot;v@v.com&quot;,
+  &quot;message&quot;: &quot;Hello&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(48)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/notifications/</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-48">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(49)">
+      <td><span class="badge" style="background:#dcfce7;color:#22c55e">GET</span></td>
+      <td class="path">/api/notifications/unread-count</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-49">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(50)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/notifications/read-all</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-50">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(51)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/notifications/test</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;title&quot;: &quot;Test&quot;,
+  &quot;body&quot;: &quot;Hello&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-51">
+      <td colspan="5"><pre>{
+  &quot;title&quot;: &quot;Test&quot;,
+  &quot;body&quot;: &quot;Hello&quot;
+}</pre></td>
+    </tr>
+
+    <tr class="row warn" onclick="toggle(52)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/notifications/notif123/read</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{}</td>
+    </tr>
+    <tr class="detail" id="detail-52">
+      <td colspan="5"><pre>{}</pre></td>
+    </tr>
+
+    <tr class="row" onclick="toggle(53)">
+      <td><span class="badge" style="background:#fef3c7;color:#f59e0b">POST</span></td>
+      <td class="path">/api/chatbot/seller/chat</td>
+      <td><span class="chip ok">200</span></td>
+      <td class="ms">0ms</td>
+      <td class="preview">{
+  &quot;message&quot;: &quot;How do I list a product?&quot;
+}</td>
+    </tr>
+    <tr class="detail" id="detail-53">
+      <td colspan="5"><pre>{
+  &quot;message&quot;: &quot;How do I list a product?&quot;
+}</pre></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<script>
+function toggle(i) {
+  const d = document.getElementById('detail-' + i);
+  d.classList.toggle('open');
+}
+function filterRows(type, btn) {
+  document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#main-table .row').forEach(row => {
+    const detail = row.nextElementSibling;
+    if (type === 'all') {
+      row.style.display = '';
+    } else if (type === 'ok') {
+      row.style.display = row.querySelector('.chip.ok') ? '' : 'none';
+    } else if (type === 'fail') {
+      row.style.display = (row.querySelector('.chip.fail') || row.querySelector('.chip.err')) ? '' : 'none';
+    } else if (type === 'warn') {
+      row.style.display = row.classList.contains('warn') ? '' : 'none';
+    }
+    if (row.style.display === 'none') detail.classList.remove('open');
+  });
+}
+</script>
+</body>
+</html>
