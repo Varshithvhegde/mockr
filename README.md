@@ -2,14 +2,17 @@
 
 Zero-config OpenAPI mock server. Paste a spec, get a running server with realistic fake data instantly.
 
+[![npm](https://img.shields.io/npm/v/@varshithvh/mockr)](https://www.npmjs.com/package/@varshithvh/mockr)
+[![npm downloads](https://img.shields.io/npm/dm/@varshithvh/mockr)](https://www.npmjs.com/package/@varshithvh/mockr)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Docs](https://img.shields.io/badge/docs-online-blue)](https://varshithvhegde.github.io/mockr/)
+
 **[📖 Documentation](https://varshithvhegde.github.io/mockr/)**
 
 ## Install
 
 ```bash
 npm install -g @varshithvh/mockr
-# or run without installing
-npx --package=@varshithvh/mockr mockr serve ./openapi.yaml
 ```
 
 ## Quick start
@@ -18,11 +21,11 @@ npx --package=@varshithvh/mockr mockr serve ./openapi.yaml
 # From a local file
 mockr serve ./openapi.yaml
 
-# From a URL
+# From a remote URL
 mockr serve https://petstore3.swagger.io/api/v3/openapi.json
 
-# Custom port + artificial delay
-mockr serve ./openapi.yaml --port 4000 --delay 300
+# Or without installing
+npx @varshithvh/mockr serve ./openapi.yaml
 ```
 
 Open **http://localhost:3001/\_\_mockr/ui/** for the live dashboard — route explorer, Try it, request log, and override editor.
