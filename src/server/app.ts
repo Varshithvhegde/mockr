@@ -24,9 +24,22 @@ export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Serialise routes for the UI — pathParams/queryParams as string arrays
+  const uiRoutes = spec.routes.map(r => ({
+    method:      r.method,
+    path:        r.path,
+    operationId: r.operationId ?? '',
+    summary:     r.summary ?? '',
+    tags:        r.tags,
+    statusCode:  r.statusCode,
+    pathParams:  r.pathParams.map(p => p.name),
+    queryParams: r.queryParams.map(p => p.name),
+    schema:      JSON.stringify(r.responseSchema, null, 2),
+  }));
+
   // SSE endpoint — before requestLogger so it doesn't flood the log
   app.get('/__mockr/events', (req, res) => {
-    sseManager.addClient(res, spec.routes as unknown[]);
+    sseManager.addClient(res, uiRoutes);
     req.on('close', () => sseManager.removeClient(res));
   });
 
@@ -38,14 +51,7 @@ export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
   });
 
   app.get('/__mockr/routes', (_req, res) => {
-    res.json(spec.routes.map(r => ({
-      method:      r.method.toUpperCase(),
-      path:        r.path,
-      operationId: r.operationId,
-      summary:     r.summary,
-      statusCode:  r.statusCode,
-      tags:        r.tags,
-    })));
+    res.json(uiRoutes);
   });
 
   // Web UI — serve React app from ui-dist, fallback to inline template
