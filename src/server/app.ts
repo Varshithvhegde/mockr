@@ -4,7 +4,7 @@ import { NormalisedSpec } from '../spec/types';
 import { buildRouter } from './router';
 import { requestLogger } from './middleware/logger';
 
-export function createApp(spec: NormalisedSpec, delay: number): Express {
+export function createApp(spec: NormalisedSpec, delay: number, useCache = false): Express {
   const app = express();
 
   app.use(cors());
@@ -12,24 +12,23 @@ export function createApp(spec: NormalisedSpec, delay: number): Express {
   app.use(express.urlencoded({ extended: true }));
   app.use(requestLogger);
 
-  // Health check
   app.get('/__mockr/health', (_req, res) => {
     res.json({ ok: true, routes: spec.routes.length, title: spec.title });
   });
 
-  // Routes endpoint — list all mocked routes
   app.get('/__mockr/routes', (_req, res) => {
     res.json(spec.routes.map(r => ({
       method: r.method.toUpperCase(),
       path: r.path,
       operationId: r.operationId,
+      summary: r.summary,
       statusCode: r.statusCode,
+      tags: r.tags,
     })));
   });
 
-  app.use(buildRouter(spec, delay));
+  app.use(buildRouter(spec, delay, useCache));
 
-  // 404 for unmatched routes
   app.use((req, res) => {
     res.status(404).json({
       error: 'not_found',
