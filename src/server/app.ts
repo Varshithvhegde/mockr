@@ -7,6 +7,7 @@ import { buildRouter } from './router';
 import { requestLogger } from './middleware/logger';
 import { sseManager } from './ui/sseManager';
 import { buildPostmanCollection } from './postman';
+import { createScenarioMiddleware, Scenario } from './scenarios';
 
 // Path to the compiled React UI (ui-dist/ sits next to dist/ at project root)
 const UI_DIST = path.resolve(__dirname, '../ui-dist');
@@ -17,6 +18,7 @@ export interface AppOptions {
   proxyUrl?: string;
   proxyTimeout: number;
   overrides: import('./overrides').Override[];
+  scenario: Scenario;
 }
 
 export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
@@ -46,6 +48,10 @@ export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
   });
 
   app.use(requestLogger);
+
+  // Scenario middleware — applied globally before route handlers
+  const scenarioMiddleware = createScenarioMiddleware(options.scenario);
+  if (scenarioMiddleware) app.use(scenarioMiddleware);
 
   // System routes
   app.get('/__mockr/health', (_req, res) => {

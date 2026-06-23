@@ -12,6 +12,7 @@ import { loadOverrides } from './server/overrides';
 import { startDashboard, logPlain } from './tui/dashboard';
 import { NormalisedSpec } from './spec/types';
 import { runInit } from './commands/init';
+import { SCENARIOS, Scenario } from './server/scenarios';
 
 const program = new Command();
 
@@ -57,9 +58,10 @@ program
   .option('--watch',                     'Auto-reload on spec file change (local only)')
   .option('--proxy <url>',               'Proxy target — try real API first, fall back to mock')
   .option('--proxy-timeout <ms>',        'Timeout for proxy requests',                 '3000')
+  .option('--scenario <name>',           `Scenario mode: ${SCENARIOS.join(' | ')}`,    'happy')
   .action(async (specInput: string, options: {
     port: string; tui: boolean; delay: string; seed?: string;
-    watch?: boolean; proxy?: string; proxyTimeout: string;
+    watch?: boolean; proxy?: string; proxyTimeout: string; scenario: string;
   }) => {
     const port     = parseInt(options.port);
     const useCache = !!options.seed;
@@ -67,12 +69,20 @@ program
     if (options.seed) faker.seed(parseInt(options.seed));
 
     const overrides = loadOverrides();
+    const scenario  = (SCENARIOS.includes(options.scenario as Scenario)
+      ? options.scenario : 'happy') as Scenario;
+
+    if (scenario !== 'happy') {
+      console.log(chalk.yellow(`  Scenario: ${scenario.toUpperCase()} mode\n`));
+    }
+
     const appOptions: AppOptions = {
       delay:        parseInt(options.delay),
       useCache,
       proxyUrl:     options.proxy,
       proxyTimeout: parseInt(options.proxyTimeout),
       overrides,
+      scenario,
     };
 
     let spec: NormalisedSpec;
