@@ -23,7 +23,7 @@ Or using `npx` without a global install:
   "mcpServers": {
     "mockr": {
       "command": "npx",
-      "args": ["mockr", "mcp"]
+      "args": ["-y", "--package=@varshithvh/mockr", "mockr-mcp"]
     }
   }
 }

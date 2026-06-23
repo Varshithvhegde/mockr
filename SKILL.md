@@ -303,6 +303,19 @@ mockr-mcp
 }
 ```
 
+**Or using npx (no install required):**
+
+```json
+{
+  "mcpServers": {
+    "mockr": {
+      "command": "npx",
+      "args": ["-y", "--package=@varshithvh/mockr", "mockr-mcp"]
+    }
+  }
+}
+```
+
 **Available MCP tools:**
 
 | Tool | What it does |
