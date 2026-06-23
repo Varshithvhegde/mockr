@@ -20,8 +20,10 @@ export interface AppOptions {
   proxyTimeout: number;
   overrides: import('./overrides').Override[];
   scenario: Scenario;
-  validate: boolean;   // warn on schema mismatch
-  strict: boolean;     // reject (400) on schema mismatch
+  validate: boolean;
+  strict: boolean;
+  record: boolean;
+  recordingDir?: string;
 }
 
 export function createApp(spec: NormalisedSpec, options: AppOptions): Express {

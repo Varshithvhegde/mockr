@@ -80,7 +80,13 @@ export function buildRouter(spec: NormalisedSpec, options: AppOptions): Router {
       : createMockHandler(route, options.delay, options.useCache);
 
     const handler = options.proxyUrl
-      ? createProxyHandler(options.proxyUrl, options.proxyTimeout, baseHandler)
+      ? createProxyHandler(
+          options.proxyUrl,
+          options.proxyTimeout,
+          baseHandler,
+          options.record,
+          options.recordingDir
+        )
       : baseHandler;
 
     (router as unknown as Record<string, Function>)[route.method](

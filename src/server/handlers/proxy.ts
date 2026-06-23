@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { RecordingManager } from '../recording/recorder';
 
 const HOP_BY_HOP = new Set([
   'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization',
@@ -21,9 +22,26 @@ function buildForwardHeaders(req: Request): Record<string, string> {
 export function createProxyHandler(
   proxyUrl: string,
   proxyTimeout: number,
-  fallback: RequestHandler
+  fallback: RequestHandler,
+  record = false,
+  recordingDir?: string
 ): RequestHandler {
+  const recorder = (record || recordingDir) ? new RecordingManager(recordingDir) : null;
+
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const query = req.search ?? req.url?.split('?')[1] ?? '';
+
+    // --- Replay from recording if proxy is unavailable ---
+    if (recorder) {
+      const existing = recorder.load(req.method, req.path, query);
+      if (existing && !record) {
+        // replay-only mode: serve from recording
+        res.locals.mockrSource = 'recording';
+        res.status(existing.status).json(existing.body);
+        return;
+      }
+    }
+
     const targetUrl = new URL(req.path + (req.search ?? ''), proxyUrl).toString();
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), proxyTimeout);
@@ -47,19 +65,46 @@ export function createProxyHandler(
         res.status(proxyRes.status);
         const ct = proxyRes.headers.get('content-type') ?? 'application/json';
         res.setHeader('content-type', ct);
+        let data: unknown;
         try {
-          const data = await proxyRes.json();
-          res.json(data);
+          data = await proxyRes.json();
         } catch {
           const text = await proxyRes.text();
           res.send(text);
+          return;
         }
+
+        // Record the response
+        if (recorder) {
+          recorder.save({
+            method:     req.method,
+            path:       req.path,
+            query,
+            status:     proxyRes.status,
+            headers:    { 'content-type': ct },
+            body:       data,
+            recordedAt: new Date().toISOString(),
+          });
+          res.setHeader('X-Mockr-Recorded', 'true');
+        }
+
+        res.json(data);
         return;
       }
-      // 4xx/5xx — fall through to mock
+      // 4xx/5xx from proxy — fall through to recording or mock
     } catch {
       clearTimeout(timer);
-      // Network error or timeout — fall through
+      // Network error or timeout — try recording then mock
+    }
+
+    // Try to serve from a recording before falling back to mock
+    if (recorder) {
+      const recorded = recorder.load(req.method, req.path, query);
+      if (recorded) {
+        res.locals.mockrSource = 'recording';
+        res.status(recorded.status).json(recorded.body);
+        return;
+      }
     }
 
     res.locals.mockrSource = 'mock';
