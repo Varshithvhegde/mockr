@@ -6,8 +6,10 @@ export interface RequestEvent {
   status: number;
   duration: number;
   timestamp: Date;
+  source?: 'proxy' | 'mock';
+  requestBody?: unknown;
+  responseBody?: unknown;
 }
 
 class MockrEventBus extends EventEmitter {}
-
 export const eventBus = new MockrEventBus();
