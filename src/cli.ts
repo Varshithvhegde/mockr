@@ -1,5 +1,7 @@
 import { Command } from 'commander';
 import { faker } from '@faker-js/faker';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { version } = require('../package.json');
 import chalk from 'chalk';
 import http from 'http';
 import chokidar from 'chokidar';
@@ -19,7 +21,7 @@ const program = new Command();
 program
   .name('mockr')
   .description('Zero-config OpenAPI mock server')
-  .version('0.1.2');
+  .version(version);
 
 function handleSpecError(err: unknown, specInput: string): never {
   const msg = (err as Error).message ?? String(err);
