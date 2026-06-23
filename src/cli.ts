@@ -11,6 +11,7 @@ import { clearResponseCache } from './server/handlers/mock';
 import { loadOverrides } from './server/overrides';
 import { startDashboard, logPlain } from './tui/dashboard';
 import { NormalisedSpec } from './spec/types';
+import { runInit } from './commands/init';
 
 const program = new Command();
 
@@ -142,6 +143,23 @@ program
     process.on('SIGINT', () => {
       server.close(() => { console.log(chalk.gray('\n  mockr stopped.\n')); process.exit(0); });
     });
+  });
+
+program
+  .command('init <spec>')
+  .description('Generate a mockr.json config file with example overrides from an OpenAPI spec')
+  .option('--force', 'Overwrite existing mockr.json')
+  .action(async (specInput: string, options: { force?: boolean }) => {
+    process.stdout.write(chalk.gray('  Loading spec...'));
+    try {
+      const raw    = await loadSpec(specInput);
+      const parsed = await parseSpec(raw);
+      const spec   = resolveSpec(parsed);
+      process.stdout.write(chalk.green(` ✓  (${spec.routes.length} routes)\n`));
+      runInit(spec, options.force ?? false);
+    } catch (err) {
+      handleSpecError(err, specInput);
+    }
   });
 
 program.parse(process.argv);
