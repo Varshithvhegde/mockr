@@ -6,6 +6,7 @@ import { NormalisedSpec } from '../spec/types';
 import { buildRouter } from './router';
 import { requestLogger } from './middleware/logger';
 import { sseManager } from './ui/sseManager';
+import { buildPostmanCollection } from './postman';
 
 // Path to the compiled React UI (ui-dist/ sits next to dist/ at project root)
 const UI_DIST = path.resolve(__dirname, '../ui-dist');
@@ -53,6 +54,17 @@ export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
 
   app.get('/__mockr/routes', (_req, res) => {
     res.json(uiRoutes);
+  });
+
+  // Postman collection export
+  app.get('/__mockr/postman', (req, res) => {
+    const proto    = req.headers['x-forwarded-proto'] ?? req.protocol;
+    const host     = req.headers.host ?? `localhost`;
+    const baseUrl  = `${proto}://${host}`;
+    const collection = buildPostmanCollection(spec, baseUrl);
+    const filename   = `${spec.title.replace(/[^a-z0-9]/gi, '_')}_mockr.json`;
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.json(collection);
   });
 
   // Web UI — serve React app from ui-dist, fallback to inline template
