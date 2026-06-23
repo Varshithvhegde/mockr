@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Route } from '../types';
 
 interface Props { route: Route }
@@ -10,6 +10,64 @@ interface ActiveOverride {
   body?: unknown;
   delay?: number;
 }
+
+// Template token reference groups
+const TOKEN_GROUPS = [
+  {
+    label: 'Request',
+    color: 'text-sky-400',
+    tokens: [
+      { token: '{{params.id}}',    desc: 'Path param — replace "id" with your param name' },
+      { token: '{{query.page}}',   desc: 'Query string param' },
+      { token: '{{body.email}}',   desc: 'Request body field — echo back what was sent' },
+      { token: '{{headers.authorization}}', desc: 'Request header value' },
+      { token: '{{method}}',       desc: 'HTTP method (GET, POST…)' },
+      { token: '{{path}}',         desc: 'Full request path' },
+      { token: '{{now}}',          desc: 'Current ISO datetime' },
+      { token: '{{timestamp}}',    desc: 'Unix timestamp (seconds)' },
+    ],
+  },
+  {
+    label: 'Identity',
+    color: 'text-purple-400',
+    tokens: [
+      { token: '{{faker.uuid}}',      desc: 'Random UUID' },
+      { token: '{{faker.email}}',     desc: 'Random email address' },
+      { token: '{{faker.name}}',      desc: 'Full name' },
+      { token: '{{faker.firstName}}', desc: 'First name' },
+      { token: '{{faker.lastName}}',  desc: 'Last name' },
+      { token: '{{faker.username}}',  desc: 'Username' },
+      { token: '{{faker.phone}}',     desc: 'Phone number' },
+    ],
+  },
+  {
+    label: 'Data',
+    color: 'text-green-400',
+    tokens: [
+      { token: '{{faker.number}}',    desc: 'Random integer 1–1000' },
+      { token: '{{faker.price}}',     desc: 'Price (float)' },
+      { token: '{{faker.boolean}}',   desc: 'true or false' },
+      { token: '{{faker.date}}',      desc: 'ISO date (YYYY-MM-DD)' },
+      { token: '{{faker.datetime}}',  desc: 'ISO datetime string' },
+      { token: '{{faker.slug}}',      desc: 'URL-friendly slug' },
+      { token: '{{faker.color}}',     desc: 'Color name' },
+    ],
+  },
+  {
+    label: 'Text & Place',
+    color: 'text-amber-400',
+    tokens: [
+      { token: '{{faker.word}}',      desc: 'Single lorem word' },
+      { token: '{{faker.sentence}}',  desc: 'Lorem sentence' },
+      { token: '{{faker.paragraph}}', desc: 'Lorem paragraph' },
+      { token: '{{faker.url}}',       desc: 'URL' },
+      { token: '{{faker.image}}',     desc: 'Image URL' },
+      { token: '{{faker.city}}',      desc: 'City name' },
+      { token: '{{faker.country}}',   desc: 'Country name' },
+      { token: '{{faker.company}}',   desc: 'Company name' },
+    ],
+  },
+];
 
 // Common HTTP status codes with labels
 const STATUS_OPTIONS = [
@@ -142,6 +200,8 @@ export function OverrideEditor({ route }: Props) {
   const [removing, setRemoving]   = useState(false);
   const [error, setError]         = useState('');
   const [bodyError, setBodyError] = useState('');
+  const [showTokens, setShowTokens] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const presets = buildPresets(route);
   const schemaExample = schemaToExample(route.schema ?? '');
@@ -168,6 +228,21 @@ export function OverrideEditor({ route }: Props) {
       })
       .catch(() => {});
   }, [route.path, route.method]);
+
+  const insertToken = (token: string) => {
+    const ta = textareaRef.current;
+    if (!ta) { setBody(prev => prev + token); return; }
+    const start = ta.selectionStart ?? body.length;
+    const end   = ta.selectionEnd   ?? body.length;
+    const next  = body.slice(0, start) + token + body.slice(end);
+    setBody(next);
+    setBodyError('');
+    // Restore cursor after the inserted token
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(start + token.length, start + token.length);
+    });
+  };
 
   const applyPreset = (preset: typeof presets[0]) => {
     setStatus(String(preset.status));
@@ -317,6 +392,7 @@ export function OverrideEditor({ route }: Props) {
           )}
         </div>
         <textarea
+          ref={textareaRef}
           value={body}
           onChange={e => { setBody(e.target.value); setBodyError(''); }}
           rows={7}
@@ -328,6 +404,69 @@ export function OverrideEditor({ route }: Props) {
         />
         {bodyError && <p className="text-red-400 text-xs mt-1">{bodyError}</p>}
         <p className="text-[10px] text-slate-600 mt-1">Must be valid JSON. Leave empty to use generated data.</p>
+
+        {/* Template token reference */}
+        <div className="mt-2 border border-slate-700 rounded overflow-hidden">
+          <button
+            onClick={() => setShowTokens(v => !v)}
+            className="w-full flex items-center justify-between px-3 py-2 bg-slate-800 hover:bg-slate-750 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="text-purple-400 font-mono font-bold">{'{{}}'}</span>
+              Template tokens — click any to insert at cursor
+            </span>
+            <span className="text-slate-500 text-[10px]">{showTokens ? '▲ hide' : '▼ show'}</span>
+          </button>
+
+          {showTokens && (
+            <div className="bg-slate-900 p-3 space-y-4">
+              {TOKEN_GROUPS.map(group => (
+                <div key={group.label}>
+                  <p className={`text-[9px] font-bold uppercase tracking-widest mb-2 ${group.color}`}>
+                    {group.label}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.tokens.map(({ token, desc }) => (
+                      <button
+                        key={token}
+                        onClick={() => insertToken(token)}
+                        title={desc}
+                        className="font-mono text-[10px] px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white rounded transition-colors"
+                      >
+                        {token}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Route-specific param tokens */}
+              {route.pathParams.length > 0 && (
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-widest mb-2 text-sky-400">
+                    This route's path params
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {route.pathParams.map(p => (
+                      <button
+                        key={p}
+                        onClick={() => insertToken(`{{params.${p}}}`)}
+                        title={`Value of :${p} from the URL`}
+                        className="font-mono text-[10px] px-2 py-1 bg-sky-900/30 hover:bg-sky-900/50 border border-sky-800/50 text-sky-300 rounded transition-colors"
+                      >
+                        {`{{params.${p}}}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-[9px] text-slate-600 pt-1 border-t border-slate-800">
+                Single-token fields preserve type: <code className="text-slate-500">"price": "{'{{faker.price}}'}"</code> → <code className="text-slate-500">{"price: 42.5"}</code> (float, not string)
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Delay */}
