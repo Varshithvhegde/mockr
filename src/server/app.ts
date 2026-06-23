@@ -1,10 +1,14 @@
 import express, { Express } from 'express';
 import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
 import { NormalisedSpec } from '../spec/types';
 import { buildRouter } from './router';
 import { requestLogger } from './middleware/logger';
 import { sseManager } from './ui/sseManager';
-import { buildUiHtml } from './ui/template';
+
+// Path to the compiled React UI
+const UI_DIST = path.resolve(__dirname, '../../ui-dist');
 
 export interface AppOptions {
   delay: number;
@@ -44,11 +48,19 @@ export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
     })));
   });
 
-  // Web UI
-  app.get('/__mockr/ui', (_req, res) => {
-    res.setHeader('Content-Type', 'text/html');
-    res.send(buildUiHtml(spec.routes));
-  });
+  // Web UI — serve React app from ui-dist, fallback to inline template
+  if (fs.existsSync(UI_DIST)) {
+    app.use('/__mockr/ui', express.static(UI_DIST));
+    app.get('/__mockr/ui/*', (_req, res) => {
+      res.sendFile(path.join(UI_DIST, 'index.html'));
+    });
+  } else {
+    // Fallback: serve simple inline page pointing user to build the UI
+    app.get('/__mockr/ui', (_req, res) => {
+      res.setHeader('Content-Type', 'text/html');
+      res.send('<html><body style="font-family:monospace;padding:40px;background:#0f172a;color:#e2e8f0"><h2>mockr UI</h2><p>Run <code>cd ui && npm run build</code> to build the UI, then restart mockr.</p></body></html>');
+    });
+  }
 
   app.use(buildRouter(spec, options));
 

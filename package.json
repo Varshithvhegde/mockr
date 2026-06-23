@@ -7,11 +7,13 @@
   "files": [
     "bin/",
     "dist/",
+    "ui-dist/",
     "README.md"
   ],
   "engines": { "node": ">=18.0.0" },
   "scripts": {
-    "build": "tsup src/cli.ts --format cjs --outDir dist --clean",
+    "build": "tsup src/cli.ts --format cjs --outDir dist --clean && npm run build:ui",
+    "build:ui": "cd ui && npm run build",
     "dev": "tsx src/cli.ts serve",
     "start": "node dist/cli.js",
     "prepublishOnly": "npm run build"

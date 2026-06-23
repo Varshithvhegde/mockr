@@ -1,3 +1,6 @@
 node_modules/
 dist/
+ui-dist/
+ui/node_modules/
 *.log
+report.html
