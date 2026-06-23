@@ -8,6 +8,7 @@ import { parseSpec } from './spec/parser';
 import { resolveSpec } from './spec/resolver';
 import { createApp, AppOptions } from './server/app';
 import { clearResponseCache } from './server/handlers/mock';
+import { loadOverrides } from './server/overrides';
 import { startDashboard, logPlain } from './tui/dashboard';
 import { NormalisedSpec } from './spec/types';
 
@@ -64,11 +65,13 @@ program
 
     if (options.seed) faker.seed(parseInt(options.seed));
 
+    const overrides = loadOverrides();
     const appOptions: AppOptions = {
-      delay:         parseInt(options.delay),
+      delay:        parseInt(options.delay),
       useCache,
-      proxyUrl:      options.proxy,
-      proxyTimeout:  parseInt(options.proxyTimeout),
+      proxyUrl:     options.proxy,
+      proxyTimeout: parseInt(options.proxyTimeout),
+      overrides,
     };
 
     let spec: NormalisedSpec;

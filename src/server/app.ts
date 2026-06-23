@@ -15,6 +15,7 @@ export interface AppOptions {
   useCache: boolean;
   proxyUrl?: string;
   proxyTimeout: number;
+  overrides: import('./overrides').Override[];
 }
 
 export function createApp(spec: NormalisedSpec, options: AppOptions): Express {

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { NormalisedSpec, NormalisedRoute } from '../spec/types';
 import { createMockHandler } from './handlers/mock';
 import { createCrudHandler } from './handlers/crud';
@@ -6,6 +6,7 @@ import { createProxyHandler } from './handlers/proxy';
 import { authMiddleware } from './middleware/auth';
 import { CrudStore } from './store/crudStore';
 import { AppOptions } from './app';
+import { findOverride, Override } from './overrides';
 
 /** Strip the last /:param segment to get the collection base path */
 function deriveCollectionBase(route: NormalisedRoute): string | null {
@@ -39,10 +40,32 @@ function isNonRestPath(path: string): boolean {
   return NON_REST_FRAGMENTS.some(f => path.toLowerCase().includes(f));
 }
 
+function createOverrideMiddleware(overrides: Override[]) {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const match = findOverride(overrides, req.method, req.path);
+    if (!match) { next(); return; }
+
+    if (match.delay && match.delay > 0) {
+      await new Promise(r => setTimeout(r, match.delay));
+    }
+    if (match.headers) {
+      for (const [k, v] of Object.entries(match.headers)) res.setHeader(k, v);
+    }
+    const status = match.status ?? 200;
+    if (match.body === undefined) { res.status(status).end(); return; }
+    res.status(status).json(match.body);
+  };
+}
+
 export function buildRouter(spec: NormalisedSpec, options: AppOptions): Router {
   const router    = Router();
   const store     = new CrudStore();
   const listPaths = buildListPathSet(spec);
+
+  // Override middleware runs before every route handler
+  if (options.overrides.length > 0) {
+    router.use(createOverrideMiddleware(options.overrides));
+  }
 
   for (const route of spec.routes) {
     const collectionBase = deriveCollectionBase(route);
@@ -52,12 +75,10 @@ export function buildRouter(spec: NormalisedSpec, options: AppOptions): Router {
       !isNonRestPath(route.path)
     );
 
-    // Pick base handler
     const baseHandler = isRestRoute
       ? createCrudHandler(route, store, collectionBase!)
       : createMockHandler(route, options.delay, options.useCache);
 
-    // Wrap with proxy if enabled
     const handler = options.proxyUrl
       ? createProxyHandler(options.proxyUrl, options.proxyTimeout, baseHandler)
       : baseHandler;
