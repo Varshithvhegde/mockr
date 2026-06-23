@@ -7,6 +7,7 @@ import { authMiddleware } from './middleware/auth';
 import { CrudStore } from './store/crudStore';
 import { AppOptions } from './app';
 import { findOverride, Override } from './overrides';
+import { processTemplate, extractPathParams } from './template';
 
 /** Strip the last /:param segment to get the collection base path */
 function deriveCollectionBase(route: NormalisedRoute): string | null {
@@ -53,7 +54,12 @@ function createOverrideMiddleware(overrides: Override[]) {
     }
     const status = match.status ?? 200;
     if (match.body === undefined) { res.status(status).end(); return; }
-    res.status(status).json(match.body);
+
+    // Process template tokens in the body
+    const pathParams = extractPathParams(match.path, req.path);
+    const resolvedBody = processTemplate(match.body, req, pathParams);
+
+    res.status(status).json(resolvedBody);
   };
 }
 
