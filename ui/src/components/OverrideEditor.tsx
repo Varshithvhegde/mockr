@@ -3,13 +3,22 @@ import type { Route } from '../types';
 
 interface Props { route: Route }
 
+interface SequenceStep {
+  status: string;
+  body: string;
+  delay: string;
+}
+
 interface ActiveOverride {
   method: string;
   path: string;
   status?: number;
   body?: unknown;
   delay?: number;
+  sequence?: { status?: number; body?: unknown; delay?: number }[];
 }
+
+const DEFAULT_STEP = (): SequenceStep => ({ status: '200', body: '{}', delay: '0' });
 
 // Template token reference groups
 const TOKEN_GROUPS = [
@@ -203,6 +212,11 @@ export function OverrideEditor({ route }: Props) {
   const [showTokens, setShowTokens] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Sequence mode
+  const [useSequence, setUseSequence] = useState(false);
+  const [steps, setSteps] = useState<SequenceStep[]>([DEFAULT_STEP(), DEFAULT_STEP()]);
+  const [activeStep, setActiveStep] = useState(0);
+
   const presets = buildPresets(route);
   const schemaExample = schemaToExample(route.schema ?? '');
 
@@ -216,14 +230,27 @@ export function OverrideEditor({ route }: Props) {
         );
         if (match) {
           setActive(match);
-          setStatus(String(match.status ?? ''));
-          setBody(match.body !== undefined ? JSON.stringify(match.body, null, 2) : '');
-          setDelay(String(match.delay ?? ''));
+          if (match.sequence && match.sequence.length > 0) {
+            setUseSequence(true);
+            setSteps(match.sequence.map(s => ({
+              status: String(s.status ?? 200),
+              body: s.body !== undefined ? JSON.stringify(s.body, null, 2) : '{}',
+              delay: String(s.delay ?? 0),
+            })));
+            setActiveStep(0);
+          } else {
+            setUseSequence(false);
+            setStatus(String(match.status ?? ''));
+            setBody(match.body !== undefined ? JSON.stringify(match.body, null, 2) : '');
+            setDelay(String(match.delay ?? ''));
+          }
         } else {
           setActive(null);
           setStatus('');
           setBody(schemaExample);
           setDelay('');
+          setUseSequence(false);
+          setSteps([DEFAULT_STEP(), DEFAULT_STEP()]);
         }
       })
       .catch(() => {});
@@ -260,28 +287,42 @@ export function OverrideEditor({ route }: Props) {
   };
 
   const save = async () => {
-    if (!validate()) return;
+    if (!useSequence && !validate()) return;
     setSaving(true); setError('');
     try {
-      let parsedBody: unknown = undefined;
-      if (body.trim()) parsedBody = JSON.parse(body);
-      const res = await fetch('/__mockr/override', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: route.method, path: route.path,
+      let payload: Record<string, unknown> = { method: route.method, path: route.path };
+
+      if (useSequence) {
+        const parsedSteps = steps.map(s => {
+          let b: unknown = undefined;
+          try { if (s.body.trim()) b = JSON.parse(s.body); } catch {}
+          return {
+            status: s.status ? parseInt(s.status) : 200,
+            body: b,
+            delay: s.delay ? parseInt(s.delay) : undefined,
+          };
+        });
+        payload.sequence = parsedSteps;
+      } else {
+        let parsedBody: unknown = undefined;
+        if (body.trim()) parsedBody = JSON.parse(body);
+        payload = {
+          ...payload,
           status: status ? parseInt(status) : undefined,
           body:   parsedBody,
           delay:  delay ? parseInt(delay) : undefined,
-        }),
+        };
+      }
+
+      const res = await fetch('/__mockr/override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
       setSaved(true);
-      setActive({ method: route.method, path: route.path,
-        status: status ? parseInt(status) : undefined,
-        body: parsedBody, delay: delay ? parseInt(delay) : undefined,
-      });
+      setActive({ method: route.method, path: route.path, ...(useSequence ? { sequence: payload.sequence as ActiveOverride['sequence'] } : { status: status ? parseInt(status) : undefined }) });
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
       setError((e as Error).message);
@@ -346,8 +387,114 @@ export function OverrideEditor({ route }: Props) {
         </div>
       </div>
 
-      {/* Status code */}
-      <div>
+      {/* Mode toggle */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setUseSequence(false)}
+          className={`flex-1 py-2 text-xs font-semibold rounded border transition-colors ${
+            !useSequence ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'
+          }`}
+        >
+          Single response
+        </button>
+        <button
+          onClick={() => setUseSequence(true)}
+          className={`flex-1 py-2 text-xs font-semibold rounded border transition-colors ${
+            useSequence ? 'bg-purple-700 border-purple-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'
+          }`}
+        >
+          ⚡ Sequence
+        </button>
+      </div>
+
+      {/* Sequence editor */}
+      {useSequence && (
+        <div className="border border-purple-800/50 rounded-lg overflow-hidden">
+          <div className="bg-purple-900/20 px-3 py-2 border-b border-purple-800/40 flex items-center justify-between">
+            <div>
+              <p className="text-purple-300 text-xs font-semibold">Response sequence</p>
+              <p className="text-purple-400/60 text-[10px] mt-0.5">Each call advances to the next step. Last step repeats.</p>
+            </div>
+            <button
+              onClick={() => setSteps(s => [...s, DEFAULT_STEP()])}
+              className="text-[10px] px-2 py-1 bg-purple-800/50 hover:bg-purple-700/50 text-purple-300 rounded border border-purple-700/50 transition-colors"
+            >
+              + Add step
+            </button>
+          </div>
+
+          {/* Step tabs */}
+          <div className="flex border-b border-slate-700 bg-slate-800/50 overflow-x-auto">
+            {steps.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveStep(i)}
+                className={`flex items-center gap-1.5 px-3 py-2 text-[10px] font-semibold border-b-2 flex-shrink-0 transition-colors ${
+                  i === activeStep
+                    ? 'border-purple-500 text-purple-300'
+                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                  statusColor(parseInt(s.status) || 200).replace('border-', '').replace('text-', 'text-')
+                } bg-slate-700`}>
+                  {i + 1}
+                </span>
+                <span className={`font-mono ${statusColor(parseInt(s.status) || 200).split(' ').find(c => c.startsWith('text-')) ?? 'text-slate-300'}`}>
+                  {s.status || '200'}
+                </span>
+                {steps.length > 1 && i === activeStep && (
+                  <span
+                    onClick={e => { e.stopPropagation(); setSteps(s => s.filter((_, j) => j !== i)); setActiveStep(Math.max(0, i - 1)); }}
+                    className="ml-1 text-slate-600 hover:text-red-400 cursor-pointer"
+                  >×</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Active step editor */}
+          {steps[activeStep] && (
+            <div className="p-3 space-y-3 bg-slate-900/50">
+              <div className="flex gap-2 items-center">
+                <div>
+                  <p className="text-[9px] text-slate-500 mb-1">Status</p>
+                  <div className="flex gap-1 flex-wrap">
+                    {[200,201,202,400,401,404,500,503].map(c => (
+                      <button key={c} onClick={() => setSteps(s => s.map((st, i) => i === activeStep ? { ...st, status: String(c) } : st))}
+                        className={`text-[9px] px-1.5 py-0.5 rounded border transition-colors ${String(c) === steps[activeStep].status ? statusColor(c) : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'}`}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="ml-auto">
+                  <p className="text-[9px] text-slate-500 mb-1">Delay</p>
+                  <input type="number" value={steps[activeStep].delay}
+                    onChange={e => setSteps(s => s.map((st, i) => i === activeStep ? { ...st, delay: e.target.value } : st))}
+                    placeholder="0ms"
+                    className="w-20 bg-slate-800 border border-slate-600 text-slate-200 text-xs px-2 py-1 rounded outline-none focus:border-purple-500 font-mono"
+                  />
+                </div>
+              </div>
+              <div>
+                <p className="text-[9px] text-slate-500 mb-1">Body (JSON)</p>
+                <textarea
+                  value={steps[activeStep].body}
+                  onChange={e => setSteps(s => s.map((st, i) => i === activeStep ? { ...st, body: e.target.value } : st))}
+                  rows={5}
+                  spellCheck={false}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-purple-500 text-slate-200 text-xs px-3 py-2 rounded outline-none font-mono resize-y leading-relaxed"
+                  placeholder='{ "status": "pending" }'
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Status code (single mode only) */}
+      {!useSequence && <div>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
           Status code — what HTTP status to return
         </p>
@@ -374,10 +521,10 @@ export function OverrideEditor({ route }: Props) {
           placeholder={`${route.statusCode} (spec default)`}
           className="w-36 bg-slate-800 border border-slate-600 text-slate-200 text-xs px-2.5 py-1.5 rounded outline-none focus:border-blue-500 font-mono"
         />
-      </div>
+      </div>}
 
-      {/* Response body */}
-      <div>
+      {/* Response body (single mode only) */}
+      {!useSequence && <div>
         <div className="flex items-center justify-between mb-2">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
             Response body — JSON to return instead of generated data
@@ -467,10 +614,10 @@ export function OverrideEditor({ route }: Props) {
             </div>
           )}
         </div>
-      </div>
+      </div>}
 
-      {/* Delay */}
-      <div>
+      {/* Delay (single mode only) */}
+      {!useSequence && <div>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
           Delay — artificial wait before responding (test loading states)
         </p>
@@ -496,7 +643,7 @@ export function OverrideEditor({ route }: Props) {
             className="w-20 bg-slate-800 border border-slate-600 text-slate-200 text-xs px-2.5 py-1 rounded outline-none focus:border-blue-500 font-mono"
           />
         </div>
-      </div>
+      </div>}
 
       {error && (
         <div className="text-red-400 text-xs bg-red-900/20 border border-red-800 rounded px-3 py-2">{error}</div>

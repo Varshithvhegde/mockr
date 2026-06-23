@@ -74,7 +74,7 @@ export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
 
   // Override editor — write/delete an override from the UI
   app.post('/__mockr/override', async (req, res) => {
-    const { method, path: overridePath, status, body, delay, headers: hdrs, remove } = req.body ?? {};
+    const { method, path: overridePath, status, body, delay, headers: hdrs, sequence, remove } = req.body ?? {};
     if (!method || !overridePath) {
       res.status(400).json({ error: 'method and path are required' });
       return;
@@ -96,10 +96,14 @@ export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
 
     if (!remove) {
       const entry: Record<string, unknown> = { method: method.toUpperCase(), path: overridePath };
-      if (status  !== undefined) entry.status  = status;
-      if (body    !== undefined) entry.body    = body;
-      if (delay   !== undefined) entry.delay   = delay;
-      if (hdrs    !== undefined) entry.headers = hdrs;
+      if (sequence !== undefined) {
+        entry.sequence = sequence;
+      } else {
+        if (status  !== undefined) entry.status  = status;
+        if (body    !== undefined) entry.body    = body;
+        if (delay   !== undefined) entry.delay   = delay;
+        if (hdrs    !== undefined) entry.headers = hdrs;
+      }
       config.overrides.push(entry);
     }
 

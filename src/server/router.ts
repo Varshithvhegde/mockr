@@ -42,22 +42,39 @@ function isNonRestPath(path: string): boolean {
 }
 
 function createOverrideMiddleware(overrides: Override[]) {
+  // Counter per "METHOD:path-pattern" — tracks which sequence step to serve next
+  const sequenceCounters = new Map<string, number>();
+
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const match = findOverride(overrides, req.method, req.path);
     if (!match) { next(); return; }
 
-    if (match.delay && match.delay > 0) {
-      await new Promise(r => setTimeout(r, match.delay));
+    // Resolve sequence step if present
+    let step: { status?: number; body?: unknown; delay?: number; headers?: Record<string, string> } = match;
+    if (match.sequence && match.sequence.length > 0) {
+      const key = `${match.method.toUpperCase()}:${match.path}`;
+      const idx = sequenceCounters.get(key) ?? 0;
+      // Stay on last step once exhausted (don't cycle)
+      const stepIdx = Math.min(idx, match.sequence.length - 1);
+      step = match.sequence[stepIdx];
+      // Advance counter only if not yet at last step
+      if (idx < match.sequence.length - 1) sequenceCounters.set(key, idx + 1);
+      // Add header so clients can see which step was served
+      res.setHeader('X-Mockr-Sequence-Step', `${stepIdx + 1}/${match.sequence.length}`);
     }
-    if (match.headers) {
-      for (const [k, v] of Object.entries(match.headers)) res.setHeader(k, v);
+
+    if (step.delay && step.delay > 0) {
+      await new Promise(r => setTimeout(r, step.delay));
     }
-    const status = match.status ?? 200;
-    if (match.body === undefined) { res.status(status).end(); return; }
+    if (step.headers) {
+      for (const [k, v] of Object.entries(step.headers)) res.setHeader(k, v);
+    }
+    const status = step.status ?? 200;
+    if (step.body === undefined) { res.status(status).end(); return; }
 
     // Process template tokens in the body
     const pathParams = extractPathParams(match.path, req.path);
-    const resolvedBody = processTemplate(match.body, req, pathParams);
+    const resolvedBody = processTemplate(step.body, req, pathParams);
 
     res.status(status).json(resolvedBody);
   };

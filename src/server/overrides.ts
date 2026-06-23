@@ -1,6 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 
+export interface SequenceStep {
+  status?: number;
+  body?: unknown;
+  delay?: number;
+  headers?: Record<string, string>;
+}
+
 export interface Override {
   method: string;
   path: string;
@@ -8,6 +15,8 @@ export interface Override {
   body?: unknown;
   delay?: number;
   headers?: Record<string, string>;
+  /** Ordered list of responses — served one per call, last one repeats */
+  sequence?: SequenceStep[];
 }
 
 export interface OverridesConfig {
