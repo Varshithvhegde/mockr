@@ -7,9 +7,9 @@ Zero-config OpenAPI mock server. Paste a spec, get a running server with realist
 ## Install
 
 ```bash
-npm install -g mockr
+npm install -g @varshithvh/mockr
 # or run without installing
-npx mockr serve ./openapi.yaml
+npx --package=@varshithvh/mockr mockr serve ./openapi.yaml
 ```
 
 ## Quick start
