@@ -72,6 +72,97 @@ export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
     res.json(uiRoutes);
   });
 
+  // Override editor — write/delete an override from the UI
+  app.post('/__mockr/override', async (req, res) => {
+    const { method, path: overridePath, status, body, delay, headers: hdrs, remove } = req.body ?? {};
+    if (!method || !overridePath) {
+      res.status(400).json({ error: 'method and path are required' });
+      return;
+    }
+
+    const configFile = ['mockr.json', '.mockr.json', 'mockr.config.json']
+      .map(f => path.resolve(process.cwd(), f))
+      .find(f => fs.existsSync(f)) ?? path.resolve(process.cwd(), 'mockr.json');
+
+    let config: { overrides: Record<string, unknown>[] } = { overrides: [] };
+    if (fs.existsSync(configFile)) {
+      try { config = JSON.parse(fs.readFileSync(configFile, 'utf8')); } catch {}
+    }
+
+    // Remove existing entry for this method+path
+    config.overrides = (config.overrides ?? []).filter(
+      (o: Record<string, unknown>) => !(o.method === method.toUpperCase() && o.path === overridePath)
+    );
+
+    if (!remove) {
+      const entry: Record<string, unknown> = { method: method.toUpperCase(), path: overridePath };
+      if (status  !== undefined) entry.status  = status;
+      if (body    !== undefined) entry.body    = body;
+      if (delay   !== undefined) entry.delay   = delay;
+      if (hdrs    !== undefined) entry.headers = hdrs;
+      config.overrides.push(entry);
+    }
+
+    fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
+
+    // Hot-reload overrides in memory without restart
+    options.overrides.splice(0, options.overrides.length, ...config.overrides.map((o: Record<string, unknown>) => o as import('./overrides').Override));
+
+    res.json({ ok: true, total: config.overrides.length, file: path.basename(configFile) });
+  });
+
+  // Try it — proxy a request through the mock server and return result
+  app.post('/__mockr/try', async (req, res) => {
+    const { method, path: tryPath, body: tryBody, headers: tryHeaders, params } = req.body ?? {};
+    if (!method || !tryPath) {
+      res.status(400).json({ error: 'method and path are required' });
+      return;
+    }
+
+    // Resolve path params
+    let resolvedPath = tryPath;
+    if (params && typeof params === 'object') {
+      for (const [k, v] of Object.entries(params as Record<string, string>)) {
+        resolvedPath = resolvedPath.replace(`:${k}`, encodeURIComponent(v));
+      }
+    }
+
+    const proto = req.protocol;
+    const host  = req.headers.host ?? 'localhost';
+    const url   = `${proto}://${host}${resolvedPath}`;
+
+    try {
+      const fetchRes = await fetch(url, {
+        method: method.toUpperCase(),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(tryHeaders ?? {}),
+        },
+        body: ['GET','DELETE','HEAD'].includes(method.toUpperCase())
+          ? undefined
+          : JSON.stringify(tryBody ?? {}),
+      });
+
+      const ct = fetchRes.headers.get('content-type') ?? '';
+      let responseBody: unknown;
+      try { responseBody = await fetchRes.json(); }
+      catch { responseBody = await fetchRes.text(); }
+
+      res.json({
+        status:  fetchRes.status,
+        headers: Object.fromEntries(fetchRes.headers.entries()),
+        body:    responseBody,
+      });
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
+  // Current overrides — so UI can show what's active
+  app.get('/__mockr/overrides', (_req, res) => {
+    res.json(options.overrides);
+  });
+
   // Postman collection export
   app.get('/__mockr/postman', (req, res) => {
     const proto    = req.headers['x-forwarded-proto'] ?? req.protocol;
