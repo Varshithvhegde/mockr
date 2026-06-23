@@ -1,17 +1,19 @@
 {
-  "name": "mockr",
+  "name": "@varshithvh/mockr",
   "version": "0.1.1",
   "description": "Zero-config OpenAPI mock server — paste a spec, get a running server",
+  "license": "MIT",
   "bin": {
-    "mockr": "./bin/mockr.js",
-    "mockr-mcp": "./bin/mockr-mcp.js"
+    "mockr": "bin/mockr.js",
+    "mockr-mcp": "bin/mockr-mcp.js"
   },
   "main": "./dist/index.js",
   "files": [
     "bin/",
     "dist/",
     "ui-dist/",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=18.0.0"
