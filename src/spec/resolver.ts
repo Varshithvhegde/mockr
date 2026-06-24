@@ -13,6 +13,37 @@ function pickStatusCode(responses: Record<string, unknown>, method: HttpMethod):
   return success ?? codes[0] ?? 200;
 }
 
+function extractResponseExample(responses: Record<string, unknown>, statusCode: number): unknown {
+  const resp = responses[statusCode] as Record<string, unknown> | undefined
+    ?? responses['default'] as Record<string, unknown> | undefined;
+  if (!resp) return undefined;
+
+  // OAS3: content['application/json'].example or examples map
+  const content = resp.content as Record<string, unknown> | undefined;
+  if (content) {
+    const json = content['application/json'] as Record<string, unknown> | undefined;
+    if (json) {
+      if (json.example !== undefined) return json.example;
+      const examples = json.examples as Record<string, Record<string, unknown>> | undefined;
+      if (examples) {
+        const first = Object.values(examples)[0];
+        if (first?.value !== undefined) return first.value;
+      }
+    }
+  }
+
+  // Swagger 2: response-level examples
+  const ex = resp.examples as Record<string, unknown> | undefined;
+  if (ex) {
+    const jsonEx = ex['application/json'];
+    if (jsonEx !== undefined) return jsonEx;
+    const first = Object.values(ex)[0];
+    if (first !== undefined) return first;
+  }
+
+  return undefined;
+}
+
 function extractResponseSchema(responses: Record<string, unknown>, statusCode: number): JSONSchema {
   const resp = responses[statusCode] as Record<string, unknown> | undefined
     ?? responses['default'] as Record<string, unknown> | undefined;
@@ -84,6 +115,7 @@ export function resolveSpec(api: Record<string, unknown>): NormalisedSpec {
       const responses = (operation.responses as Record<string, unknown>) ?? {};
       const statusCode = pickStatusCode(responses, method);
       const responseSchema = extractResponseSchema(responses, statusCode);
+      const responseExample = extractResponseExample(responses, statusCode);
 
       routes.push({
         path: toExpressPath(openApiPath),
@@ -96,6 +128,7 @@ export function resolveSpec(api: Record<string, unknown>): NormalisedSpec {
         queryParams: extractParams(operation, 'query'),
         requestBodySchema: extractRequestBodySchema(operation),
         responseSchema,
+        responseExample,
         statusCode,
         security: hasSecurity(operation, globalSecurity),
         routeDelay: typeof operation['x-mockr-delay'] === 'number' ? operation['x-mockr-delay'] as number : undefined,

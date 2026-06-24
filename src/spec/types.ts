@@ -19,6 +19,7 @@ export interface NormalisedRoute {
   queryParams: ParamSchema[];
   requestBodySchema?: JSONSchema;
   responseSchema: JSONSchema;
+  responseExample?: unknown;  // from spec's example/examples — used as-is before faker
   statusCode: number;
   security: boolean;
   routeDelay?: number;  // from x-mockr-delay extension on the operation

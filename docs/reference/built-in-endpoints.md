@@ -11,6 +11,7 @@ These endpoints are available on every mockr server regardless of your spec.
 | `GET /__mockr/events` | SSE stream for live request events |
 | `GET /__mockr/overrides` | Current active overrides |
 | `POST /__mockr/override` | Add or update an override |
+| `POST /__mockr/reset` | Reset CRUD store, sequence counters, and response cache |
 | `POST /__mockr/try` | Internal — used by the web UI Try it feature |
 
 ## `GET /__mockr/health`

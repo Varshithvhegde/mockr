@@ -122,6 +122,7 @@ npm run docs:dev
 | `GET /__mockr/events` | SSE stream for live request events |
 | `GET /__mockr/overrides` | Current active overrides |
 | `POST /__mockr/override` | Add/update an override at runtime |
+| `POST /__mockr/reset` | Reset CRUD store + sequence counters + response cache |
 
 ---
 
@@ -165,6 +166,43 @@ generated fake data. The file is watched — changes apply without restarting.
 - `body` — JSON response body (supports template tokens)
 - `delay` — milliseconds to wait before responding
 - `headers` — extra response headers to set
+
+---
+
+## Spec examples
+
+If your OpenAPI spec defines `example` or `examples` on a response, mockr uses them directly instead of generating faker data:
+
+```yaml
+responses:
+  '200':
+    content:
+      application/json:
+        example:
+          id: "user-123"
+          name: "Alice Smith"
+          role: "admin"
+```
+
+Responses served from spec examples include an `X-Mockr-Source: spec-example` header.
+
+Priority order: **override → spec example → faker generated**
+
+---
+
+## Reset endpoint
+
+Useful in CI/CD or between test runs to wipe all state without restarting:
+
+```bash
+curl -X POST http://localhost:3001/__mockr/reset
+# { "ok": true, "message": "CRUD store, sequence counters, and response cache cleared" }
+```
+
+Resets:
+- CRUD in-memory store (all created/updated/deleted items)
+- Sequence counters (sequences restart from step 1)
+- Response cache (forces fresh faker data on next request)
 
 ---
 

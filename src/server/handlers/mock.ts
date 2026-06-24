@@ -78,8 +78,13 @@ export function createMockHandler(route: NormalisedRoute, delay: number, useCach
     let responseData: unknown;
     const key = cacheKey(route, req);
 
+    // Spec example takes highest priority — use as-is
+    if (route.responseExample !== undefined) {
+      responseData = route.responseExample;
+      res.setHeader('X-Mockr-Source', 'spec-example');
+    }
     // Fix 4 — serve cached response for reproducibility (GET only)
-    if (useCache && route.method === 'get' && responseCache.has(key)) {
+    else if (useCache && route.method === 'get' && responseCache.has(key)) {
       responseData = responseCache.get(key);
     } else {
       if (Object.keys(schema).length === 0) {

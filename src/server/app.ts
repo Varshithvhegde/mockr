@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { NormalisedSpec } from '../spec/types';
 import { buildRouter } from './router';
+import { clearResponseCache } from './handlers/mock';
 import { requestLogger } from './middleware/logger';
 import { sseManager } from './ui/sseManager';
 import { buildPostmanCollection } from './postman';
@@ -192,7 +193,15 @@ export function createApp(spec: NormalisedSpec, options: AppOptions): Express {
     });
   }
 
-  app.use(buildRouter(spec, options));
+  const { router, reset } = buildRouter(spec, options);
+
+  app.post('/__mockr/reset', (_req, res) => {
+    reset();
+    clearResponseCache();
+    res.json({ ok: true, message: 'CRUD store, sequence counters, and response cache cleared' });
+  });
+
+  app.use(router);
 
   // 404 catch-all
   app.use((req, res) => {

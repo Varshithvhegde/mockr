@@ -45,7 +45,7 @@ function createOverrideMiddleware(overrides: Override[]) {
   // Counter per "METHOD:path-pattern" — tracks which sequence step to serve next
   const sequenceCounters = new Map<string, number>();
 
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const middleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const match = findOverride(overrides, req.method, req.path);
     if (!match) { next(); return; }
 
@@ -78,16 +78,31 @@ function createOverrideMiddleware(overrides: Override[]) {
 
     res.status(status).json(resolvedBody);
   };
+
+  const reset = () => sequenceCounters.clear();
+  return { middleware, reset };
 }
 
-export function buildRouter(spec: NormalisedSpec, options: AppOptions): Router {
+export interface RouterBundle {
+  router: Router;
+  reset: () => void;
+}
+
+export function buildRouter(spec: NormalisedSpec, options: AppOptions): RouterBundle {
   const router    = Router();
   const store     = new CrudStore();
   const listPaths = buildListPathSet(spec);
 
+  const { middleware: overrideMiddleware, reset: resetSequences } = createOverrideMiddleware(options.overrides);
+
+  const reset = () => {
+    store.clear();
+    resetSequences();
+  };
+
   // Always register override middleware so hot-reload works even when
   // no overrides exist at startup (length check prevents registration)
-  router.use(createOverrideMiddleware(options.overrides));
+  router.use(overrideMiddleware);
 
   for (const route of spec.routes) {
     const collectionBase = deriveCollectionBase(route);
@@ -118,5 +133,5 @@ export function buildRouter(spec: NormalisedSpec, options: AppOptions): Router {
     );
   }
 
-  return router;
+  return { router, reset };
 }
